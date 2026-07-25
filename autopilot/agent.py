@@ -90,6 +90,13 @@ def run_loop(max_iters: int = 8, base_url: str = "http://localhost:8000",
             name, args = fb["name"], fb["args"]
             messages.append({"role": "assistant", "content": reasoning})
 
+        if not reasoning and name != "report_done":
+            # the model acted silently: ask it to voice the diagnosis it acted on
+            probe = chat(base_url, messages + [{"role": "user", "content":
+                f"In 2-3 sentences, state the diagnosis behind your {name} call "
+                "(grounded in the previous metrics). Reply with prose only."}], tools=[])
+            reasoning = ((probe.get("reasoning_content") or "") + " " + (probe.get("content") or "")).strip()
+
         print(f"\n=== iter {i} · {name}({json.dumps(args)})\n{reasoning}\n")
 
         # Mark benchmark as "running" on the live dashboard before executing
@@ -104,11 +111,12 @@ def run_loop(max_iters: int = 8, base_url: str = "http://localhost:8000",
         else:
             journal.add_note(f"[iter {i}] {name}({json.dumps(args)}) -> {result[:400]} | {reasoning[:300]}")
 
+        nudge = "\n\nBefore your next tool call, explain your diagnosis of THIS result in 2-3 sentences."
         if calls:
             messages.append({"role": "tool", "tool_call_id": call.get("id", "0"),
-                             "content": result})
+                             "content": result + nudge})
         else:
-            messages.append({"role": "user", "content": f"Tool result: {result}"})
+            messages.append({"role": "user", "content": f"Tool result: {result}{nudge}"})
 
         if name == "report_done":
             print(f"Agent done: {json.loads(result).get('summary', '')}")
