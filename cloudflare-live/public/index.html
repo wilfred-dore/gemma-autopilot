@@ -228,8 +228,8 @@ tr.lb-viol td:last-child{color:var(--red)}
   </div>
   <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
   <span class="spacer"></span>
-  <button class="btn" id="demo-btn" title="Load sample data to preview the UI">Demo data</button>
-  <button class="btn danger" id="reset-btn" title="Delete all runs from the server">Clear all</button>
+  <button class="btn dev-only" id="demo-btn" title="Load sample data to preview the UI" style="display:none">Demo data</button>
+  <button class="btn danger dev-only" id="reset-btn" title="Delete all runs from the server" style="display:none">Clear all</button>
 </header>
 
 <!-- ── Tiles ──────────────────────────────────────────────────────────── -->
@@ -330,6 +330,13 @@ tr.lb-viol td:last-child{color:var(--red)}
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════════════
+// Dev-only controls — "Demo data" / "Clear all" are only shown with ?dev=true
+// ═══════════════════════════════════════════════════════════════════════════
+if (/^(1|true)$/i.test(new URLSearchParams(location.search).get('dev') || '')) {
+  document.querySelectorAll('.dev-only').forEach(el => { el.style.display = ''; });
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // State
 // ═══════════════════════════════════════════════════════════════════════════
