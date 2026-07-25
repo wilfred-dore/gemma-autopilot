@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gemma Autopilot — live</title>
+<title>Gemma Autopilot: live</title>
 <style>
   :root{
     --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --grid:#e8e7e2;
@@ -51,12 +51,12 @@
 </head>
 <body data-palette="#2a78d6">
 <h1>Gemma Autopilot <span class="badge" id="mode">live</span></h1>
-<div class="sub">Gemma 4 optimizing its own deployment — maximize tokens/s, TTFT ≤ 500 ms, energy on the record. Dashed line = human expert.</div>
+<div class="sub">Gemma 4 optimizing its own deployment: maximize tokens/s, TTFT ≤ 500 ms, energy on the record. Dashed line = human expert.</div>
 
 <div class="tiles" id="tiles"></div>
 <div class="row">
-  <div class="card"><h2>Throughput per run — tokens/s</h2><svg id="c1"></svg></div>
-  <div class="card"><h2>Energy per token — joules</h2><svg id="c2"></svg></div>
+  <div class="card"><h2>Throughput per run: tokens/s</h2><svg id="c1"></svg></div>
+  <div class="card"><h2>Energy per token: joules</h2><svg id="c2"></svg></div>
 </div>
 <div class="row">
   <div class="card"><h2>Leaderboard</h2><div id="lb"></div></div>
@@ -68,7 +68,7 @@
 const REPLAY = new URLSearchParams(location.search).has('replay');
 const tip = document.getElementById('tip');
 
-function fmt(x,d=1){return x==null?'—':Number(x).toFixed(d)}
+function fmt(x,d=1){return x==null?'-':Number(x).toFixed(d)}
 
 function tiles(s){
   const lb=s.leaderboard||[], best=lb[0], human=lb.find(r=>r.label==='human-expert');
@@ -78,11 +78,11 @@ function tiles(s){
   document.getElementById('tiles').innerHTML=`
    <div class="tile"><div class="k">Best throughput</div><div class="v">${fmt(best?.tokens_per_s)} tok/s</div>
      <div class="d ${delta>0?'up':''}">${delta==null?'':(delta>0?'+':'')+fmt(delta)+'% vs human expert'} </div></div>
-   <div class="tile"><div class="k">Best energy</div><div class="v">${isFinite(bestJ)?fmt(bestJ,3):'—'} J/tok</div>
+   <div class="tile"><div class="k">Best energy</div><div class="v">${isFinite(bestJ)?fmt(bestJ,3):'-'} J/tok</div>
      <div class="d">lower is better</div></div>
    <div class="tile"><div class="k">Agent iterations</div><div class="v">${agentRuns.length}</div>
      <div class="d">autonomous runs</div></div>
-   <div class="tile"><div class="k">Leader</div><div class="v" style="font-size:18px">${best?best.label:'—'}</div>
+   <div class="tile"><div class="k">Leader</div><div class="v" style="font-size:18px">${best?best.label:'-'}</div>
      <div class="d">${best&&best.score===0?'⚠ constraint violated':'meets TTFT ≤ 500 ms'}</div></div>`;
 }
 
@@ -103,7 +103,7 @@ function chart(el, runs, key, refVal, dec){
   g+=`<polyline class="series" points="${runs.map((r,i)=>`${x(i)},${y(key(r))}`).join(' ')}"/>`;
   runs.forEach((r,i)=>{const viol=r.metrics.ttft_ms>500;
     g+=`<circle class="pt${viol?' viol':''}" r="5" cx="${x(i)}" cy="${y(key(r))}"
-        data-t="${r.label} — ${fmt(key(r),dec)} · TTFT ${fmt(r.metrics.ttft_ms,0)} ms${viol?' ⚠ over constraint':''}"/>`;});
+        data-t="${r.label}: ${fmt(key(r),dec)} · TTFT ${fmt(r.metrics.ttft_ms,0)} ms${viol?' ⚠ over constraint':''}"/>`;});
   svg.innerHTML=g;
   svg.querySelectorAll('.pt').forEach(c=>{
     c.addEventListener('mousemove',e=>{tip.style.display='block';
