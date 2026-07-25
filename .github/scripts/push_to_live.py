@@ -26,10 +26,12 @@ RESET_FIRST = os.environ.get("RESET_FIRST", "false").lower() == "true"
 HEADERS = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {KEY}",
+    # Identify ourselves clearly — helps Cloudflare Bot Fight Mode allow the request.
+    "User-Agent": "gemma-autopilot-ci/1.0",
 }
 
 
-def api(path: str, payload: dict | None = None) -> dict:
+def api(path: str, payload: dict | None = None, fatal: bool = True) -> dict | None:
     data = json.dumps(payload or {}).encode() if payload is not None else b"{}"
     req = urllib.request.Request(
         f"{BASE}{path}", data=data, headers=HEADERS, method="POST"
@@ -39,12 +41,17 @@ def api(path: str, payload: dict | None = None) -> dict:
             return json.loads(r.read())
     except urllib.error.HTTPError as e:
         body = e.read().decode()
-        print(f"  ✗ HTTP {e.code} on {path}: {body}", file=sys.stderr)
-        sys.exit(1)
+        msg = f"HTTP {e.code} on {path}: {body[:120]}"
+        if fatal:
+            print(f"  ✗ {msg}", file=sys.stderr)
+            sys.exit(1)
+        else:
+            print(f"  ⚠ {msg} (non-fatal, continuing)", file=sys.stderr)
+            return None
 
 
 def push_run(run: dict) -> None:
-    resp = api("/api/push", run)
+    resp = api("/api/push", run, fatal=True)
     score = ""
     if run.get("metrics"):
         m = run["metrics"]
@@ -136,7 +143,7 @@ def main() -> None:
 
     if RESET_FIRST:
         print("Resetting dashboard…")
-        api("/api/reset")
+        api("/api/reset", fatal=False)  # non-fatal: Bot Fight Mode may block on CI
         time.sleep(0.5)
 
     runs: list[dict] = []
