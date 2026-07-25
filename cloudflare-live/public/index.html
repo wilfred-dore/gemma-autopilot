@@ -179,9 +179,9 @@ tr.lb-viol td:last-child{color:var(--red)}
   text-shadow:0 0 6px rgba(61,255,160,.8)}
 .matrix-card .card-body{position:relative;z-index:1}
 .matrix-card .trace::-webkit-scrollbar-thumb{background:rgba(61,255,160,.3)}
-.matrix-card .t-item{background:rgba(61,255,160,.05);border-left:3px solid #3dffa0;
+.matrix-card .t-item{background:rgba(61,255,160,.05);border-left:none;
   font-family:"JetBrains Mono",ui-monospace,monospace}
-.matrix-card .t-item.running{border-left-color:#ffd400;animation:matrixPulse 1.5s ease-in-out infinite}
+.matrix-card .t-item.running{animation:matrixPulse 1.5s ease-in-out infinite}
 .matrix-card .t-meta{color:rgba(140,255,190,.55)}
 .matrix-card .t-src{color:rgba(140,255,190,.8);border-color:rgba(61,255,160,.4);background:rgba(61,255,160,.06)}
 .matrix-card .t-label{color:#3dffa0;text-shadow:0 0 6px rgba(61,255,160,.4)}
@@ -189,7 +189,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 .matrix-card .t-text{color:#c9ffe0}
 .matrix-card .t-cursor{display:inline-block;color:#3dffa0;animation:matrixBlink .9s steps(1) infinite;
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding-left:2px}
-@keyframes matrixPulse{50%{border-left-color:#3dffa0}}
+@keyframes matrixPulse{50%{background:rgba(61,255,160,.1)}}
 @keyframes matrixBlink{50%{opacity:.15}}
 
 /* ── Legend ───────────────────────────────────────────────────────────── */
