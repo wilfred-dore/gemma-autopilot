@@ -68,8 +68,13 @@ def runs_from_sample() -> list[dict]:
         print(f"  [skip] {path} not found")
         return []
     state = json.loads(path.read_text())
-    raw_runs   = state.get("runs", [])
-    reasoning_map = {r["label"]: r["text"] for r in state.get("reasoning", [])}
+    # The file may either be a single flat session (legacy format: top-level
+    # "runs"/"reasoning") or a multi-session wrapper like {"session2": {...},
+    # "final": {...}}. When wrapped, push the "final" session — it's the
+    # authoritative, most complete run for the live dashboard.
+    session = state.get("final", state)
+    raw_runs   = session.get("runs", [])
+    reasoning_map = {r["label"]: r["text"] for r in session.get("reasoning", []) if r.get("label") != "note"}
 
     # Build a minimal parent-id chain: each agent-iter-N links to the previous
     # Non-agent runs (vllm-defaults, human-expert) have no parent.
