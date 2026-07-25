@@ -228,7 +228,6 @@ tr.lb-viol td:last-child{color:var(--red)}
 <!-- ── Header ─────────────────────────────────────────────────────────── -->
 <header>
   <div>
-    <span class="eyebrow">Google-style AI Lab · Live run</span>
     <h1>⚡ Gemma²</h1>
   </div>
   <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
@@ -275,7 +274,7 @@ tr.lb-viol td:last-child{color:var(--red)}
       <div class="avatar" id="avatar-challenger">
         <svg class="spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg>
       </div>
-      <div class="f-role">Challenger · this run</div>
+      <div class="f-role" id="challenger-role">Challenger · this run</div>
       <div class="f-name" id="challenger-name">waiting…</div>
       <div class="f-bar"><div class="f-bar-fill" id="challenger-bar"></div></div>
       <div class="f-score" id="challenger-score">—</div>
@@ -1106,6 +1105,14 @@ function render() {
   renderLeaderboard(allRuns);
   renderTrace(allRuns);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Iteration selector — inspect any run as the arena challenger
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('iter-select').addEventListener('change', (e) => {
+  selectedChallengerId = e.target.value;
+  renderArena(allRuns);
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Reset button
