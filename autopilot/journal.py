@@ -114,6 +114,8 @@ class Journal:
 
     def push_live_running(self, label: str, reasoning: str) -> None:
         """Call before a benchmark to mark a run as 'running' on the dashboard."""
+        if not _LIVE_ENDPOINT or not _LIVE_API_KEY:
+            return
         parent_id = self._runs[-1].get("label") if self._runs else None
         payload = {
             "id": label,
