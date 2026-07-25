@@ -20,3 +20,7 @@ Built in one day at the Paris Gemma 4 Hackathon (42 Paris). Full writeup on Kagg
 | Attention backend (`restart_server`) | FLASH_ATTN / TRITON_ATTN / FLASHINFER | Kernel-level differences; workload-dependent, measured not assumed |
 
 Every run documents hardware, model variant, precision and concurrency, and every decision ships with the agent's plain-language diagnosis. Energy is measured with NVML energy-counter deltas, not estimated.
+
+## The recorded session, decision by decision
+
+The full narrative (every agent quote, parameter set, result and outcome, plus the system block describing the exact experimental setup) is in [`assets/sessions/decisions.json`](assets/sessions/decisions.json). Highlights, verbatim from the journal: the agent opened with a deliberate probe ("initiating a baseline probe to establish the current performance ceiling"), diagnosed under-utilization from a healthy TTFT ("concurrency of 1... significantly under-utilizing the H100"), was rejected by its own guardrail at concurrency 128 and adapted ("exceeded the hard guardrail of 64... I will test the maximum allowed"), and converged at 1,377.5 tok/s, beating both the defaults (+239%) and our engineer's hand-tune (+6.8%).

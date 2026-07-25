@@ -1,0 +1,131 @@
+{
+ "system": {
+  "model": "google/gemma-4-12B-it",
+  "precision": "bf16",
+  "engine": "vLLM 0.25.1 (gemma4 parsers + tool chat template)",
+  "gpu": "NVIDIA H100 PCIe 80GB",
+  "driver": "CUDA 13.0 / 580.142",
+  "max_model_len": 16384,
+  "objective": {
+   "maximize": "tokens_per_s",
+   "constraint_ttft_ms": 500.0,
+   "secondary": "joules_per_token"
+  }
+ },
+ "story": [
+  {
+   "step": 1,
+   "actor": "vllm-defaults",
+   "label": "vllm-defaults",
+   "decision": "vLLM defaults: the configuration every team ships.",
+   "params": {
+    "max_num_seqs": 256,
+    "enable_prefix_caching": true,
+    "power_cap_w": null,
+    "concurrency": 8
+   },
+   "result": {
+    "tokens_per_s": 405.68,
+    "ttft_ms": 121.16,
+    "joules_per_token": 0.768
+   },
+   "outcome": "measured"
+  },
+  {
+   "step": 2,
+   "actor": "human-expert",
+   "label": "human-expert",
+   "decision": "Hand-tuned by our performance engineer: KV/prefix caching on, higher client concurrency to saturate the batch.",
+   "params": {
+    "max_num_seqs": 256,
+    "enable_prefix_caching": true,
+    "power_cap_w": null,
+    "concurrency": 32
+   },
+   "result": {
+    "tokens_per_s": 1289.42,
+    "ttft_ms": 297.33,
+    "joules_per_token": 0.3452
+   },
+   "outcome": "measured"
+  },
+  {
+   "step": 3,
+   "actor": "agent",
+   "label": "agent-iter-1",
+   "decision": "Since there are no previous metrics available, I am initiating a baseline probe to establish the current performance ceiling. I am starting with a high `max_num_seqs` and enabled prefix caching to determine if the system is currently memory-bound or limited by compute overhead at high concurrency.",
+   "params": {
+    "max_num_seqs": 256,
+    "enable_prefix_caching": true,
+    "power_cap_w": null,
+    "concurrency": 1
+   },
+   "result": {
+    "tokens_per_s": 57.89,
+    "ttft_ms": 66.95,
+    "joules_per_token": 4.3471
+   },
+   "outcome": "measured"
+  },
+  {
+   "step": 4,
+   "actor": "agent",
+   "label": "agent-iter-2",
+   "decision": "The initial benchmark shows a very healthy TTFT (66.95 ms) well below the 500 ms limit, suggesting the current configuration is not latency-bound. However, with a concurrency of 1 and `max_num_seqs` at 256, we are significantly under-utilizing the H100's throughput capabilities. I will now aggressively increase concurrency to find the saturation point where throughput peaks before TTFT degrades.",
+   "params": {
+    "max_num_seqs": 256,
+    "enable_prefix_caching": true,
+    "power_cap_w": null,
+    "concurrency": 32
+   },
+   "result": {
+    "tokens_per_s": 1377.47,
+    "ttft_ms": 255.02,
+    "joules_per_token": 0.3534
+   },
+   "outcome": "best"
+  },
+  {
+   "step": 5,
+   "actor": "guardrail",
+   "label": "note",
+   "decision": "[iter 3] run_benchmark({\"concurrency\": 128, \"enable_prefix_caching\": true, \"max_num_seqs\": 256}) -> {\"error\": \"rejected\", \"reason\": \"concurrency=128 out of allowed range [1, 64]. Guardrail: pick a value inside the range.\"} | The previous run at concurrency 32 achieved a high throughput of 1377.47 tokens/s with a TTFT of 255.02 ms, indicating significant headroom before hitting the 500 ms limit. By doubling the concurrency to 128, I aim to maximize the GPU's compute utilization and identify the point where queueing delay"
+  },
+  {
+   "step": 6,
+   "actor": "agent",
+   "label": "agent-iter-3",
+   "decision": "The request was rejected because it exceeded the hard guardrail of 64 concurrent requests. Since the previous run at 32 concurrency yielded a high throughput (1377.47 tokens/s) and a safe TTFT (255.02 ms), I will test the maximum allowed concurrency of 64 to find the upper bound of the throughput/latency trade-off.",
+   "params": {
+    "max_num_seqs": 256,
+    "enable_prefix_caching": true,
+    "power_cap_w": null,
+    "concurrency": 64
+   },
+   "result": {
+    "tokens_per_s": 1357.47,
+    "ttft_ms": 261.57,
+    "joules_per_token": 0.3467
+   },
+   "outcome": "measured"
+  },
+  {
+   "step": 7,
+   "actor": "agent",
+   "label": "agent-iter-4",
+   "decision": "The previous run at 32 concurrency showed high throughput with a TTFT of 255ms, leaving significant headroom before the 500ms limit. I am testing the maximum allowed concurrency of 64 to determine if the H100 can sustain higher throughput without violating the latency constraint.",
+   "params": {
+    "max_num_seqs": 256,
+    "enable_prefix_caching": true,
+    "power_cap_w": null,
+    "concurrency": 64
+   },
+   "result": {
+    "tokens_per_s": 1370.4,
+    "ttft_ms": 258.74,
+    "joules_per_token": 0.3498
+   },
+   "outcome": "measured"
+  }
+ ]
+}
