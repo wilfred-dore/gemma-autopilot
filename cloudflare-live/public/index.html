@@ -250,12 +250,15 @@ tr.lb-viol td:last-child{color:var(--red)}
 @keyframes winnerGlow{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 12px rgba(232,166,0,.28),var(--shadow)}}
 
 .arena-log{text-align:center;font-size:12px;font-weight:600;color:var(--ink2);padding:2px 18px 18px;min-height:18px;transition:color .3s;position:relative;z-index:1}
-.arena-stats{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 18px 12px;flex-wrap:wrap}
+.arena-stats{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 18px 4px;flex-wrap:wrap}
 .a-stat{display:flex;align-items:baseline;gap:5px}
 .a-stat-k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
 .a-stat-v{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
-.a-stat-v.factor{color:var(--purple)}
 .a-stat-sep{color:var(--border)}
+.factor-hero{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 18px 14px}
+.factor-hero-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+.factor-hero-value{font-size:44px;font-weight:800;line-height:1.05;color:var(--purple);font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 18px rgba(155,81,224,.35)}
 
 @media(max-width:640px){
   .arena{flex-direction:column;gap:4px}
@@ -335,8 +338,10 @@ tr.lb-viol td:last-child{color:var(--red)}
     <div class="a-stat"><span class="a-stat-k">Min</span><span class="a-stat-v" id="arena-min">—</span></div>
     <span class="a-stat-sep">·</span>
     <div class="a-stat"><span class="a-stat-k">Max</span><span class="a-stat-v" id="arena-max">—</span></div>
-    <span class="a-stat-sep">·</span>
-    <div class="a-stat"><span class="a-stat-k" id="arena-factor-label">Factor</span><span class="a-stat-v factor" id="arena-factor">—</span></div>
+  </div>
+  <div class="factor-hero" id="factor-hero">
+    <span class="factor-hero-label" id="arena-factor-label">Factor</span>
+    <span class="factor-hero-value" id="arena-factor">—</span>
   </div>
   <div class="arena-log" id="arena-log">No runs yet — start the autopilot to begin round 1.</div>
 </div>
