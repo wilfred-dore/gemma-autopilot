@@ -5,70 +5,87 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Gemma Autopilot · Live</title>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=Google+Sans+Text:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:      #0f0f0e;
-  --surf:    #1a1a19;
-  --card:    #232322;
-  --border:  #3a3936;
-  --ink:     #f0efe9;
-  --ink2:    #9a9890;
-  --blue:    #3987e5;
-  --green:   #22c55e;
-  --gold:    #f59e0b;
-  --red:     #ef4444;
-  --purple:  #a855f7;
-  --gray:    #6b7280;
-  --r:       10px;
+  /* Google Labs–style light palette: warm cream surface, saturated accents */
+  --bg:      #f2efe4;
+  --surf:    #ffffff;
+  --card:    #ffffff;
+  --pill:    #e8e3d2;
+  --border:  #e7e2d2;
+  --ink:     #16150f;
+  --ink2:    #6b6a5f;
+  --blue:    #4285f4;
+  --green:   #1e9e5f;
+  --gold:    #e8a600;
+  --red:     #e5483a;
+  --purple:  #9b51e0;
+  --gray:    #9a988c;
+  --r:       20px;
+  --shadow:  0 1px 2px rgba(20,20,10,.04), 0 10px 30px -12px rgba(20,20,10,.14);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}
+html,body{height:100%;background:var(--bg);color:var(--ink);
+  font:15px/1.5 "Google Sans Text","Google Sans",system-ui,-apple-system,sans-serif;
+  overflow-x:hidden}
 a{color:var(--blue)}
+h1,h2,.v,.btn,.badge,button{font-family:"Google Sans","Google Sans Text",system-ui,sans-serif}
+
+/* ── Ambient blobs (labs.google style) ───────────────────────────────── */
+.blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.blob-a{width:460px;height:460px;background:var(--blue);opacity:.20;top:-160px;right:-120px}
+.blob-b{width:420px;height:420px;background:var(--purple);opacity:.16;bottom:-180px;left:-140px}
+.blob-c{width:320px;height:320px;background:var(--gold);opacity:.14;top:38%;right:6%}
 
 /* ── Layout ──────────────────────────────────────────────────────────── */
-.page{max-width:1400px;margin:0 auto;padding:18px 20px 60px}
-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-header h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
-.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
-  padding:3px 10px;border-radius:99px;border:1px solid var(--border)}
-.badge.connected{color:var(--green);border-color:var(--green)}
-.badge.disconnected{color:var(--red);border-color:var(--red)}
-.badge.connecting{color:var(--gold);border-color:var(--gold)}
-.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.page{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:24px 24px 60px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+header h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);
+  display:block;margin-bottom:2px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+  padding:5px 12px;border-radius:99px;background:var(--card);box-shadow:var(--shadow)}
+.badge.connected{color:var(--green)}
+.badge.disconnected{color:var(--red)}
+.badge.connecting{color:var(--gold)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 header .spacer{flex:1}
-.btn{cursor:pointer;background:var(--card);border:1px solid var(--border);color:var(--ink2);
-  font:13px system-ui;padding:5px 12px;border-radius:6px;transition:.15s}
-.btn:hover{background:var(--surf);color:var(--ink)}
-.btn.danger:hover{border-color:var(--red);color:var(--red)}
+.btn{cursor:pointer;background:var(--pill);border:none;color:var(--ink);
+  font:600 13px "Google Sans Text",system-ui;padding:8px 16px;border-radius:99px;transition:.15s}
+.btn:hover{background:#ddd7bf}
+.btn.danger:hover{background:#fbe2de;color:var(--red)}
 
 /* ── Metric tiles ─────────────────────────────────────────────────────── */
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
-.tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
-.tile .k{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:4px}
-.tile .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-.tile .d{font-size:12px;color:var(--ink2);margin-top:2px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.tile .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:6px}
+.tile .v{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.tile .d{font-size:12px;color:var(--ink2);margin-top:4px}
 .tile .v.green{color:var(--green)} .tile .v.gold{color:var(--gold)} .tile .v.blue{color:var(--blue)}
 
 /* ── Main grid ────────────────────────────────────────────────────────── */
-.main-grid{display:grid;grid-template-columns:1fr 320px;gap:10px;margin-bottom:10px}
+.main-grid{display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px}
 @media(max-width:900px){.main-grid{grid-template-columns:1fr}}
-.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.bottom-grid{grid-template-columns:1fr}}
 
 /* ── Cards ────────────────────────────────────────────────────────────── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.card-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);
+.card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);
   font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
-.card-body{padding:12px 14px}
+.card-body{padding:14px 18px}
 
 /* ── Tree ─────────────────────────────────────────────────────────────── */
-#tree-wrap{overflow:hidden;background:var(--card);border-radius:var(--r);border:1px solid var(--border)}
-#tree-svg{display:block;width:100%;min-height:280px;cursor:grab}
+#tree-wrap{overflow:hidden;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow)}
+#tree-svg{display:block;width:100%;min-height:280px;cursor:grab;background:var(--card)}
 #tree-svg:active{cursor:grabbing}
 #tree-empty{display:none;text-align:center;padding:60px 20px;color:var(--ink2);font-size:14px}
 
-.link{fill:none;stroke:var(--border);stroke-width:1.5;stroke-linecap:round}
-.link-running{stroke:var(--blue);stroke-dasharray:6 4;animation:dash 1s linear infinite;stroke-width:1.5}
+.link{fill:none;stroke:var(--border);stroke-width:2;stroke-linecap:round}
+.link-running{stroke:var(--blue);stroke-dasharray:6 4;animation:dash 1s linear infinite;stroke-width:2}
 @keyframes dash{to{stroke-dashoffset:-20}}
 
 .node-circle{stroke-width:2.5;transition:filter .3s}
@@ -84,50 +101,51 @@ header .spacer{flex:1}
 
 /* ── Tooltip ──────────────────────────────────────────────────────────── */
 #tooltip{position:fixed;pointer-events:none;display:none;z-index:99;
-  background:var(--surf);border:1px solid var(--border);border-radius:8px;
-  padding:8px 12px;font-size:12px;line-height:1.5;max-width:260px;
-  box-shadow:0 4px 20px rgba(0,0,0,.4)}
+  background:var(--surf);border-radius:14px;
+  padding:10px 14px;font-size:12px;line-height:1.5;max-width:260px;
+  box-shadow:0 8px 30px rgba(20,20,10,.22)}
 #tooltip .tip-label{font-weight:700;margin-bottom:4px}
 #tooltip .tip-row{display:flex;justify-content:space-between;gap:16px;color:var(--ink2)}
 #tooltip .tip-row span:last-child{color:var(--ink);font-weight:600}
 
 /* ── Detail panel ─────────────────────────────────────────────────────── */
 #detail{position:fixed;top:0;right:-360px;width:340px;height:100vh;overflow-y:auto;
-  background:var(--surf);border-left:1px solid var(--border);z-index:50;
-  padding:18px;transition:right .3s ease;font-size:13px}
+  background:var(--surf);border-radius:20px 0 0 20px;z-index:50;
+  box-shadow:-16px 0 40px rgba(20,20,10,.16);
+  padding:20px;transition:right .3s ease;font-size:13px}
 #detail.open{right:0}
 #detail .close-btn{float:right;cursor:pointer;color:var(--ink2);font-size:18px;line-height:1}
 #detail .close-btn:hover{color:var(--ink)}
-#detail h2{font-size:15px;font-weight:700;margin-bottom:14px;padding-right:24px}
+#detail h2{font-size:16px;font-weight:700;margin-bottom:14px;padding-right:24px}
 #detail .dl dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-top:12px}
 #detail .dl dd{margin:3px 0 0;word-break:break-word}
-#detail .reasoning-box{background:var(--card);border:1px solid var(--border);border-radius:6px;
+#detail .reasoning-box{background:var(--bg);border-radius:12px;
   padding:10px 12px;margin-top:4px;line-height:1.55;color:var(--ink)}
-.status-pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
-.status-running{background:#1d3461;color:var(--blue)}
-.status-done{background:#14401f;color:var(--green)}
-.status-failed{background:#3b1111;color:var(--red)}
+.status-pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.status-running{background:rgba(66,133,244,.12);color:var(--blue)}
+.status-done{background:rgba(30,158,95,.12);color:var(--green)}
+.status-failed{background:rgba(229,72,58,.12);color:var(--red)}
 
 /* ── Leaderboard ──────────────────────────────────────────────────────── */
 table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-  color:var(--ink2);padding:7px 10px;border-bottom:1px solid var(--border)}
+  color:var(--ink2);padding:9px 12px;border-bottom:1px solid var(--border)}
 th:not(:first-child){text-align:right}
-td{padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
 td:not(:first-child){text-align:right}
 tr:last-child td{border-bottom:none}
 tr.lb-best td{color:var(--gold);font-weight:700}
 tr.lb-viol td:last-child{color:var(--red)}
 .rank-badge{display:inline-flex;align-items:center;justify-content:center;
-  width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;
-  background:var(--surf);border:1px solid var(--border)}
-.rank-badge.r1{background:var(--gold);color:#000;border-color:var(--gold)}
-.viol-chip{font-size:10px;padding:1px 5px;background:#3b1111;color:var(--red);border-radius:4px;margin-left:4px}
+  width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;
+  background:var(--pill);color:var(--ink)}
+.rank-badge.r1{background:var(--gold);color:#fff}
+.viol-chip{font-size:10px;padding:1px 6px;background:rgba(229,72,58,.12);color:var(--red);border-radius:99px;margin-left:4px}
 
 /* ── Reasoning trace ──────────────────────────────────────────────────── */
-.trace{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-right:2px}
+.trace{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:2px}
 .trace::-webkit-scrollbar{width:4px} .trace::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.t-item{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:7px;padding:8px 10px}
+.t-item{background:var(--bg);border-left:3px solid var(--blue);border-radius:12px;padding:10px 12px}
 .t-item.running{border-left-color:var(--gold);animation:borderPulse 1.5s ease-in-out infinite}
 @keyframes borderPulse{50%{border-left-color:var(--blue)}}
 .t-meta{font-size:11px;color:var(--ink2);display:flex;gap:8px;margin-bottom:4px}
@@ -135,17 +153,76 @@ tr.lb-viol td:last-child{color:var(--red)}
 .t-text{font-size:12px;color:var(--ink);line-height:1.5}
 
 /* ── Legend ───────────────────────────────────────────────────────────── */
-.legend{display:flex;flex-wrap:wrap;gap:12px;padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--ink2)}
-.legend-item{display:flex;align-items:center;gap:5px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--ink2)}
+.legend-item{display:flex;align-items:center;gap:6px}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── Self-improvement arena ───────────────────────────────────────────── */
+.arena{display:flex;align-items:center;justify-content:center;gap:14px;padding:30px 18px 8px;flex-wrap:wrap}
+.fighter{display:flex;flex-direction:column;align-items:center;width:190px;text-align:center;position:relative}
+.crown-badge{position:absolute;top:-16px;font-size:20px;animation:crownBob 2.2s ease-in-out infinite}
+@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-4px) rotate(8deg)}}
+.avatar{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow);margin-bottom:10px;animation:bob 3s ease-in-out infinite;position:relative}
+.fighter.teacher .avatar{background:radial-gradient(circle at 32% 30%,#fff8df 0%,#f6dd9a 70%)}
+.fighter.challenger .avatar{background:radial-gradient(circle at 32% 30%,#e8f0fe 0%,#bcd4fb 70%)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.spark{width:36px;height:36px;animation:spin 7s linear infinite;overflow:visible}
+.fighter.teacher .spark path{fill:var(--gold);filter:drop-shadow(0 0 6px rgba(232,166,0,.5))}
+.fighter.challenger .spark path{fill:var(--blue);filter:drop-shadow(0 0 6px rgba(66,133,244,.5))}
+@keyframes spin{to{transform:rotate(360deg)}}
+.f-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink2)}
+.f-name{font-size:13px;font-weight:700;margin:3px 0 8px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f-bar{width:100%;height:7px;border-radius:99px;background:var(--pill);overflow:hidden;margin-bottom:7px}
+.f-bar-fill{height:100%;border-radius:99px;width:0%;transition:width .8s cubic-bezier(.3,1.4,.4,1)}
+.fighter.teacher .f-bar-fill{background:var(--gold)}
+.fighter.challenger .f-bar-fill{background:var(--blue)}
+.f-bar-fill.charging{animation:chargeUp 1.1s ease-in-out infinite alternate}
+@keyframes chargeUp{from{width:18%}to{width:52%}}
+.f-score{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+
+.vs-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:70px;height:100px}
+.vs-badge{position:absolute;top:50%;left:50%;background:var(--ink);color:#fff;font-weight:800;font-size:12px;
+  padding:6px 11px;border-radius:99px;box-shadow:var(--shadow);z-index:2;animation:vsPulse 1.7s ease-in-out infinite}
+@keyframes vsPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.14)}}
+.bolt{position:absolute;top:50%;left:50%;width:44px;height:92px;opacity:.85;
+  transform:translate(-50%,-50%);animation:boltFlicker 1.4s ease-in-out infinite}
+.bolt path{fill:var(--red);filter:drop-shadow(0 0 6px rgba(229,72,58,.55))}
+@keyframes boltFlicker{0%,100%{opacity:.5}45%{opacity:1}55%{opacity:.3}}
+
+.spark-burst{position:absolute;inset:0;pointer-events:none;z-index:3}
+.spark-burst span{position:absolute;top:50%;left:50%;width:7px;height:7px;border-radius:50%}
+@keyframes sparkFly{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.3)}
+}
+
+.arena.clash .fighter{animation:shake .5s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.fighter.winner .avatar{animation:winnerGlow .9s ease-in-out 2}
+@keyframes winnerGlow{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 12px rgba(232,166,0,.28),var(--shadow)}}
+
+.arena-log{text-align:center;font-size:12px;font-weight:600;color:var(--ink2);padding:2px 18px 18px;min-height:18px;transition:color .3s}
+
+@media(max-width:640px){
+  .arena{flex-direction:column;gap:4px}
+  .vs-wrap{width:100%;height:56px}
+  .bolt{transform:rotate(90deg)}
+}
 </style>
 </head>
 <body>
+<div class="blob blob-a"></div>
+<div class="blob blob-b"></div>
+<div class="blob blob-c"></div>
 <div class="page">
 
 <!-- ── Header ─────────────────────────────────────────────────────────── -->
 <header>
-  <h1>⚡ Gemma Autopilot</h1>
+  <div>
+    <span class="eyebrow">Google-style AI Lab · Live run</span>
+    <h1>⚡ Gemma Autopilot</h1>
+  </div>
   <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
   <span class="spacer"></span>
   <button class="btn" id="demo-btn" title="Load sample data to preview the UI">Demo data</button>
@@ -158,6 +235,40 @@ tr.lb-viol td:last-child{color:var(--red)}
   <div class="tile"><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
   <div class="tile"><div class="k">Total runs</div><div class="v blue" id="t-iters">0</div><div class="d" id="t-active">0 active</div></div>
   <div class="tile"><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
+</div>
+
+<!-- ── Self-improvement arena ───────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:12px">
+  <div class="card-head">⚔️ Self-improvement arena <span style="font-weight:400;margin-left:4px">the challenger fights the teacher, round after round</span></div>
+  <div class="arena">
+    <div class="fighter teacher" id="fighter-teacher">
+      <div class="crown-badge">👑</div>
+      <div class="avatar" id="avatar-teacher">
+        <svg class="spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg>
+      </div>
+      <div class="f-role">Teacher · reigning best</div>
+      <div class="f-name" id="teacher-name">no champion yet</div>
+      <div class="f-bar"><div class="f-bar-fill" id="teacher-bar"></div></div>
+      <div class="f-score" id="teacher-score">—</div>
+    </div>
+
+    <div class="vs-wrap">
+      <svg class="bolt" viewBox="0 0 60 120"><path d="M34 2 12 62h16l-8 56 34-70H38z"/></svg>
+      <div class="vs-badge">VS</div>
+      <div class="spark-burst" id="spark-burst"></div>
+    </div>
+
+    <div class="fighter challenger" id="fighter-challenger">
+      <div class="avatar" id="avatar-challenger">
+        <svg class="spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></svg>
+      </div>
+      <div class="f-role">Challenger · this run</div>
+      <div class="f-name" id="challenger-name">waiting…</div>
+      <div class="f-bar"><div class="f-bar-fill" id="challenger-bar"></div></div>
+      <div class="f-score" id="challenger-score">—</div>
+    </div>
+  </div>
+  <div class="arena-log" id="arena-log">No runs yet — start the autopilot to begin round 1.</div>
 </div>
 
 <!-- ── Tree + Detail side ─────────────────────────────────────────────── -->
@@ -619,11 +730,108 @@ function renderTiles(runs) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Self-improvement arena — teacher (reigning best) vs. challenger (this run)
+// ═══════════════════════════════════════════════════════════════════════════
+let prevBestId = null;
+
+function renderArena(runs) {
+  const teacherRun = runs.find(r => r.id === bestId) || null;
+  const running = runs.filter(r => r.status === 'running').slice(-1)[0];
+  const nonTeacherDone = [...runs].reverse().find(r => r.id !== bestId && r.status !== 'running');
+  const challengerRun = running || nonTeacherDone || null;
+
+  const maxSc = Math.max(1, 0, ...runs.filter(r => r.metrics).map(r => score(r)));
+
+  const teacherName   = document.getElementById('teacher-name');
+  const challengerName = document.getElementById('challenger-name');
+  const teacherScore  = document.getElementById('teacher-score');
+  const challengerScore = document.getElementById('challenger-score');
+  const teacherBar    = document.getElementById('teacher-bar');
+  const challengerBar = document.getElementById('challenger-bar');
+  const log = document.getElementById('arena-log');
+
+  if (teacherRun) {
+    teacherName.textContent = teacherRun.label;
+    const s = score(teacherRun);
+    teacherScore.textContent = s > 0 ? fmt(s) + ' t/s' : '—';
+    teacherBar.classList.remove('charging');
+    teacherBar.style.width = Math.max(4, Math.min(100, (s / maxSc) * 100)) + '%';
+  } else {
+    teacherName.textContent = 'no champion yet';
+    teacherScore.textContent = '—';
+    teacherBar.classList.remove('charging');
+    teacherBar.style.width = '0%';
+  }
+
+  if (challengerRun) {
+    challengerName.textContent = challengerRun.label;
+    if (challengerRun.status === 'running') {
+      challengerScore.textContent = '⏳ training…';
+      challengerBar.classList.add('charging');
+    } else {
+      challengerBar.classList.remove('charging');
+      const s = score(challengerRun);
+      challengerScore.textContent = s > 0 ? fmt(s) + ' t/s' : 'TTFT violated';
+      challengerBar.style.width = Math.max(4, Math.min(100, (s / maxSc) * 100)) + '%';
+    }
+  } else {
+    challengerName.textContent = 'waiting…';
+    challengerScore.textContent = '—';
+    challengerBar.classList.remove('charging');
+    challengerBar.style.width = '0%';
+  }
+
+  if (bestId && bestId !== prevBestId && prevBestId !== null) {
+    triggerVictory(teacherRun ? teacherRun.label : 'the challenger');
+  } else if (!log.dataset.init) {
+    log.textContent = teacherRun
+      ? `${teacherRun.label} is the reigning champion.`
+      : 'No runs yet — start the autopilot to begin round 1.';
+    log.dataset.init = '1';
+  }
+  prevBestId = bestId;
+}
+
+function triggerVictory(newChampionLabel) {
+  const arena = document.querySelector('.arena');
+  const log = document.getElementById('arena-log');
+  const fighterTeacher = document.getElementById('fighter-teacher');
+  arena.classList.add('clash');
+  fighterTeacher.classList.add('winner');
+  spawnSparks();
+  log.textContent = `🎉 New champion! ${newChampionLabel} just beat the teacher and takes the crown.`;
+  log.style.color = 'var(--gold)';
+  setTimeout(() => {
+    arena.classList.remove('clash');
+    fighterTeacher.classList.remove('winner');
+    log.style.color = '';
+  }, 1000);
+}
+
+function spawnSparks() {
+  const burst = document.getElementById('spark-burst');
+  burst.innerHTML = '';
+  const colors = ['var(--gold)', 'var(--blue)', 'var(--red)', 'var(--green)', 'var(--purple)'];
+  for (let i = 0; i < 16; i++) {
+    const s = document.createElement('span');
+    const angle = (Math.PI * 2 * i) / 16;
+    const dist = 44 + Math.random() * 34;
+    s.style.background = colors[i % colors.length];
+    s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    s.style.animation = 'sparkFly .75s ease-out forwards';
+    burst.appendChild(s);
+  }
+  setTimeout(() => { burst.innerHTML = ''; }, 800);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Main render
 // ═══════════════════════════════════════════════════════════════════════════
 function render() {
   renderTiles(allRuns);
   renderTree(allRuns);
+  renderArena(allRuns);
   renderLeaderboard(allRuns);
   renderTrace(allRuns);
 }
