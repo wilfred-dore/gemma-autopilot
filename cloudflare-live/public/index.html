@@ -162,7 +162,8 @@ tr.lb-viol td:last-child{color:var(--red)}
 .t-item{background:var(--bg);border-left:3px solid var(--blue);border-radius:12px;padding:10px 12px}
 .t-item.running{border-left-color:var(--gold);animation:borderPulse 1.5s ease-in-out infinite}
 @keyframes borderPulse{50%{border-left-color:var(--blue)}}
-.t-meta{font-size:11px;color:var(--ink2);display:flex;gap:8px;margin-bottom:4px}
+.t-meta{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.t-src{font:700 10px "JetBrains Mono",ui-monospace,monospace;color:var(--ink2);border:1px solid var(--border);border-radius:0;padding:1px 6px;white-space:nowrap;letter-spacing:.02em}
 .t-label{font-weight:700;color:var(--ink)}
 .t-text{font-size:12px;color:var(--ink);line-height:1.5}
 
@@ -182,6 +183,7 @@ tr.lb-viol td:last-child{color:var(--red)}
   font-family:"JetBrains Mono",ui-monospace,monospace}
 .matrix-card .t-item.running{border-left-color:#ffd400;animation:matrixPulse 1.5s ease-in-out infinite}
 .matrix-card .t-meta{color:rgba(140,255,190,.55)}
+.matrix-card .t-src{color:rgba(140,255,190,.8);border-color:rgba(61,255,160,.4);background:rgba(61,255,160,.06)}
 .matrix-card .t-label{color:#3dffa0;text-shadow:0 0 6px rgba(61,255,160,.4)}
 .matrix-card .t-label::before{content:'$ ';opacity:.7}
 .matrix-card .t-text{color:#c9ffe0}
@@ -790,16 +792,21 @@ function renderTrace(runs) {
     el.innerHTML = '<p style="color:rgba(140,255,190,.55);font-size:13px;font-family:\'JetBrains Mono\',ui-monospace,monospace">// no reasoning yet.</p>';
     return;
   }
-  el.innerHTML = withReasoning.map(r => `
+  const labelById = new Map(runs.map(r => [r.id, r.label]));
+  el.innerHTML = withReasoning.map(r => {
+    const src = r.parent_id ? (labelById.get(r.parent_id) || r.parent_id) : 'root';
+    return `
     <div class="t-item ${r.status === 'running' ? 'running' : ''}">
       <div class="t-meta">
+        <span class="t-src" title="Source run">${escHtml(src)}</span>
         <span class="t-label">${escHtml(r.label)}</span>
         <span>${r.ts ? new Date(r.ts).toLocaleTimeString() : ''}</span>
         ${r.status === 'running' ? '<span style="color:var(--gold)">● running</span>' : ''}
       </div>
       <div class="t-text">${escHtml(r.reasoning.slice(0, 300))}${r.reasoning.length > 300 ? '…' : ''}</div>
     </div>
-  `).join('') + '<span class="t-cursor">▋</span>';
+  `;
+  }).join('') + '<span class="t-cursor">▋</span>';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
