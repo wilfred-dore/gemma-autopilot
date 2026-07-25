@@ -91,6 +91,12 @@ def run_loop(max_iters: int = 8, base_url: str = "http://localhost:8000",
             messages.append({"role": "assistant", "content": reasoning})
 
         print(f"\n=== iter {i} · {name}({json.dumps(args)})\n{reasoning}\n")
+
+        # Mark benchmark as "running" on the live dashboard before executing
+        if name == "run_benchmark":
+            run_label = f"agent-iter-{sum(1 for r in journal.runs if str(r.get('label','')).startswith('agent-iter')) + 1}"
+            journal.push_live_running(run_label, reasoning)
+
         result = dispatch(name, args, ctx)
 
         if name == "run_benchmark" and "error" not in json.loads(result):

@@ -8,8 +8,16 @@ TTFT constraint holds, else 0 (constraint violations never rank).
 from __future__ import annotations
 
 import json
+import os
+import threading
 import time
 from pathlib import Path
+
+# Optional: set these env vars to push every run to the Cloudflare live dashboard.
+# LIVE_ENDPOINT=https://gemma-autopilot-live.<subdomain>.workers.dev
+# LIVE_API_KEY=<your-secret-key>
+_LIVE_ENDPOINT = os.environ.get("LIVE_ENDPOINT", "").rstrip("/")
+_LIVE_API_KEY = os.environ.get("LIVE_API_KEY", "")
 
 TTFT_CONSTRAINT_MS = 500.0
 
@@ -48,6 +56,7 @@ class Journal:
     def add_run(self, run: dict, reasoning: str, label: str | None = None) -> None:
         run = dict(run)
         run["label"] = label or f"agent-iter-{sum(1 for r in self._runs if str(r.get('label','')).startswith('agent-iter')) + 1}"
+        parent_id = self._runs[-1].get("label") if self._runs else None
         self._runs.append(run)
         self._reasoning.append({
             "iter": len(self._runs),
@@ -58,6 +67,7 @@ class Journal:
         with open(self.dir / "journal.jsonl", "a") as f:
             f.write(json.dumps({"run": run, "reasoning": reasoning}) + "\n")
         self._write_state()
+        self._push_live(run, reasoning, parent_id=parent_id)
 
     def add_note(self, text: str) -> None:
         """Journal a reasoning-only entry (e.g. a search or a rejected action)."""
@@ -99,3 +109,49 @@ class Journal:
     @property
     def runs(self) -> list[dict]:
         return list(self._runs)
+
+    # ── Live push (fire-and-forget, never raises) ─────────────────────────
+
+    def push_live_running(self, label: str, reasoning: str) -> None:
+        """Call before a benchmark to mark a run as 'running' on the dashboard."""
+        parent_id = self._runs[-1].get("label") if self._runs else None
+        payload = {
+            "id": label,
+            "parent_id": parent_id,
+            "label": label,
+            "status": "running",
+            "reasoning": reasoning,
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        }
+        threading.Thread(target=self._do_push, args=(payload,), daemon=True).start()
+
+    def _push_live(self, run: dict, reasoning: str, *, parent_id: str | None) -> None:
+        if not _LIVE_ENDPOINT or not _LIVE_API_KEY:
+            return
+        payload = {
+            "id": run["label"],
+            "parent_id": parent_id,
+            "label": run["label"],
+            "status": "done",
+            "config": run.get("config"),
+            "metrics": run.get("metrics"),
+            "energy": run.get("energy"),
+            "reasoning": reasoning,
+            "ts": run.get("ts", time.strftime("%Y-%m-%dT%H:%M:%S")),
+        }
+        threading.Thread(target=self._do_push, args=(payload,), daemon=True).start()
+
+    def _do_push(self, payload: dict) -> None:
+        try:
+            import urllib.request
+            data = json.dumps(payload).encode()
+            req = urllib.request.Request(
+                f"{_LIVE_ENDPOINT}/api/push",
+                data=data,
+                headers={"Content-Type": "application/json",
+                         "Authorization": f"Bearer {_LIVE_API_KEY}"},
+                method="POST",
+            )
+            urllib.request.urlopen(req, timeout=10)
+        except Exception as exc:  # noqa: BLE001
+            print(f"[live push] failed: {exc}")
