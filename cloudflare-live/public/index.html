@@ -74,10 +74,6 @@ header .spacer{flex:1}
 .tile .d{font-size:12px;color:var(--ink2);margin-top:4px}
 .tile .v.green{color:var(--green)} .tile .v.gold{color:var(--gold)} .tile .v.blue{color:var(--blue)}
 .tile-spark{position:absolute;left:0;right:0;bottom:0;width:100%;height:60%;opacity:.4;pointer-events:none;z-index:0;display:block}
-#savings-card .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:6px}
-#savings-card .v{font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
-#savings-card .v.green{color:var(--green)}
-#savings-card .d{font-size:12px;color:var(--ink2);margin-top:4px}
 
 /* ── Main grid ────────────────────────────────────────────────────────── */
 .main-grid{display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px}
@@ -399,19 +395,6 @@ tr.lb-viol td:last-child{color:var(--red)}
       </tr></thead>
       <tbody id="lb-body"><tr><td colspan="6" style="color:var(--ink2);text-align:center;padding:20px">Waiting for runs…</td></tr></tbody>
     </table>
-  </div>
-</div>
-
-<!-- ── Cost impact ─────────────────────────────────────────────────────── -->
-<div class="card" id="savings-card" style="margin-bottom:10px">
-  <div class="card-head">💰 Cost impact <span style="font-weight:400;margin-left:4px">base model vs. the best (fine-tuned) one</span></div>
-  <div class="card-body" style="display:flex;align-items:center;gap:28px;flex-wrap:wrap">
-    <div style="min-width:180px">
-      <div class="k">I save</div>
-      <div class="v green" id="savings-amount" style="font-size:40px">—</div>
-      <div class="d">/ month with this tuning</div>
-    </div>
-    <div style="flex:1;min-width:240px;font-size:12px;color:var(--ink2);line-height:1.7" id="savings-detail">Loading model comparison…</div>
   </div>
 </div>
 
@@ -1201,15 +1184,12 @@ const MONTHLY_CREDITS = 400_000;   // Copilot premium-request credits spent this
 const COST_PER_CREDIT = 0.04;      // $ — GitHub Copilot's published overage rate per premium request
 
 function renderSavings() {
-  const amountEl = document.getElementById('savings-amount');
-  const detailEl = document.getElementById('savings-detail');
   const tileAmountEl = document.getElementById('t-savings');
   const tileDetailEl = document.getElementById('t-savings-d');
   const models = (modelComparison?.models || []).filter(m => !m.error && m.quality_score != null);
   const base = models.find(m => !m.finetuned && /base/i.test(m.label));
   const best = models.filter(m => m.finetuned).sort((a, b) => b.quality_score - a.quality_score)[0];
   if (!base || !best) {
-    detailEl.textContent = 'No model-comparison data yet — run `python -m autopilot.model_compare`.';
     tileDetailEl.textContent = 'no model-comparison data yet';
     return;
   }
@@ -1220,15 +1200,6 @@ function renderSavings() {
   const monthlySpend = MONTHLY_CREDITS * COST_PER_CREDIT;
   const monthlySavings = monthlySpend * savedFraction;
   const amountText = '$' + monthlySavings.toLocaleString('en-US', { maximumFractionDigits: 0 });
-
-  amountEl.textContent = amountText;
-  detailEl.innerHTML = `
-    <div><b>${escHtml(best.label.replace(' (fine-tuned, ours)', ''))}</b> hits <b>${fmt(best.quality_score)}</b> quality
-    vs <b>${fmt(base.quality_score)}</b> for the base model — <b>${fmt(savedFraction * 100, 1)}%</b> fewer low-quality
-    drafts to regenerate.</div>
-    <div style="margin-top:6px">${MONTHLY_CREDITS.toLocaleString('en-US')} credits/mo × $${COST_PER_CREDIT.toFixed(2)}/credit
-    = $${monthlySpend.toLocaleString('en-US')} spend · ${fmt(savedFraction * 100, 1)}% saved.</div>
-  `;
 
   tileAmountEl.textContent = amountText;
   tileDetailEl.textContent = `/ month vs. base model · ${fmt(savedFraction * 100, 1)}% fewer low-quality retries`;
