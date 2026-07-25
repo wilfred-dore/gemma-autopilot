@@ -17,6 +17,15 @@ Built in one day at the Paris Gemma 4 Hackathon (42 Paris). Full writeup on Kagg
 
 A full tour of the live dashboard: the optimization loop explained visually, then every panel of the Gemma² arena (exploration tree, leaderboard, Magic Quadrant, energy metrics).
 
+### The math, in Manim
+
+<video src="demo/output/optimization_math_manim.mp4" controls width="100%">
+  Your browser does not support the video tag — download it directly:
+  <a href="demo/output/optimization_math_manim.mp4">optimization_math_manim.mp4</a>
+</video>
+
+A pure [Manim](https://www.manim.community/) render of the two objective search: throughput `T(c)` and efficiency `E(c)`, under the hard `TTFT(c) ≤ 500 ms` guardrail, from the human baseline to the rejected branch to the champion configuration. Source: [`demo/manim/optimization_math.py`](demo/manim/optimization_math.py).
+
 ## Optimization levers (the agent's action space, explained)
 
 | Lever | What it does | Typical effect |
