@@ -2,7 +2,7 @@
 
 One entry point: run_benchmark(config, base_url) -> RunResult dict.
 Every RunResult documents hardware, model variant, precision and
-concurrency — required for reproducible benchmark claims.
+concurrency: required for reproducible benchmark claims.
 """
 
 from __future__ import annotations

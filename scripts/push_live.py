@@ -119,7 +119,7 @@ def main() -> None:
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             body = json.loads(resp.read())
-            print(f"✓ Pushed — {body}")
+            print(f"✓ Pushed: {body}")
     except urllib.error.HTTPError as exc:
         body = exc.read().decode()
         print(f"✗ HTTP {exc.code}: {body}", file=sys.stderr)

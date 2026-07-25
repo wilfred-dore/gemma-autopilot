@@ -1,6 +1,6 @@
 """Run journal + dashboard state contract.
 
-Appends every run to runs/journal.jsonl and rewrites runs/state.json —
+Appends every run to runs/journal.jsonl and rewrites runs/state.json -
 the single file the dashboard polls. Leaderboard score: tokens/s if the
 TTFT constraint holds, else 0 (constraint violations never rank).
 """

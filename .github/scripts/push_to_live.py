@@ -26,7 +26,7 @@ RESET_FIRST = os.environ.get("RESET_FIRST", "false").lower() == "true"
 HEADERS = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {KEY}",
-    # Identify ourselves clearly — helps Cloudflare Bot Fight Mode allow the request.
+    # Identify ourselves clearly: helps Cloudflare Bot Fight Mode allow the request.
     "User-Agent": "gemma-autopilot-ci/1.0",
 }
 
@@ -70,7 +70,7 @@ def runs_from_sample() -> list[dict]:
     state = json.loads(path.read_text())
     # The file may either be a single flat session (legacy format: top-level
     # "runs"/"reasoning") or a multi-session wrapper like {"session2": {...},
-    # "final": {...}}. When wrapped, push the "final" session — it's the
+    # "final": {...}}. When wrapped, push the "final" session: it's the
     # authoritative, most complete run for the live dashboard.
     session = state.get("final", state)
     raw_runs   = session.get("runs", [])
@@ -166,7 +166,7 @@ def main() -> None:
         push_run(run)
         time.sleep(0.3)
 
-    print(f"\n✓ Done — dashboard: {BASE}")
+    print(f"\n✓ Done: dashboard: {BASE}")
 
 
 if __name__ == "__main__":

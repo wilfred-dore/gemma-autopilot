@@ -37,7 +37,7 @@ export interface AgentRun {
   ts: string;
 }
 
-/** Shared Env interface — both Worker and DO reference this. */
+/** Shared Env interface: both Worker and DO reference this. */
 export interface Env {
   AGENT_HUB: DurableObjectNamespace;
   /** Set via: wrangler secret put API_KEY */

@@ -1,13 +1,13 @@
 """Model comparison: fine-tuned Gemma 4 vs. the rest of the Gemma family.
 
-Two axes, both measured — never guessed:
+Two axes, both measured: never guessed:
   - speed/energy: reuses bench_runner.run_benchmark against each model's
     live vLLM endpoint (tokens/s, TTFT, joules/token).
   - quality: an LLM-judge (itself a Gemma endpoint, injectable) scores
     each model's completions on datasets/confidential_drafting.jsonl
     against a fixed rubric (0-100), so results are comparable across models.
 
-Writes runs/model_comparison.json — the file dashboard.html polls for the
+Writes runs/model_comparison.json: the file dashboard.html polls for the
 "Model comparison" panel (datasets/model_comparison.sample.json is the
 replay/demo equivalent, clearly illustrative until you run this for real).
 """

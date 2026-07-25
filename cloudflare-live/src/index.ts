@@ -34,7 +34,7 @@ export default {
     const url = new URL(request.url);
     const hub = env.AGENT_HUB.get(env.AGENT_HUB.idFromName("main"));
 
-    // ── WebSocket (no auth — read-only view) ─────────────────────────────
+    // ── WebSocket (no auth: read-only view) ─────────────────────────────
     if (url.pathname === "/ws") {
       return hub.fetch(request);
     }

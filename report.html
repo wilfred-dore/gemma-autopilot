@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gemma² — Rapport de projet</title>
+<title>Gemma²: Rapport de projet</title>
 <style>
   :root {
     --bg: #f7f6f3; --surface: #ffffff; --ink: #0f0e0d; --ink2: #5c5a55;
@@ -114,12 +114,12 @@
     <h2>1. Résumé exécutif</h2>
     <div class="callout">
       <strong>En une phrase</strong>
-      Gemma² est un agent IA construit sur Gemma 4 qui se benchmark lui-même en boucle fermée, diagnostique les goulots d'étranglement en langage naturel, modifie sa propre configuration de déploiement (vLLM), puis se rebenchmarke — jusqu'à ce que les gains deviennent négligeables.
+      Gemma² est un agent IA construit sur Gemma 4 qui se benchmark lui-même en boucle fermée, diagnostique les goulots d'étranglement en langage naturel, modifie sa propre configuration de déploiement (vLLM), puis se rebenchmarke: jusqu'à ce que les gains deviennent négligeables.
     </div>
     <p>Le projet répond à une question concrète : <em>peut-on confier à un LLM la responsabilité d'optimiser le serveur qui le fait tourner ?</em> La réponse démontrée ici est oui, avec deux contraintes fortes :</p>
     <ul>
-      <li><strong>Contrainte de latence</strong> — TTFT (Time To First Token) ≤ 500 ms. Toute configuration qui la viole est éliminée du classement.</li>
-      <li><strong>Axe d'efficacité énergétique</strong> — joules/token tracés à chaque run, car l'énergie compte autant que la vitesse.</li>
+      <li><strong>Contrainte de latence</strong>: TTFT (Time To First Token) ≤ 500 ms. Toute configuration qui la viole est éliminée du classement.</li>
+      <li><strong>Axe d'efficacité énergétique</strong>: joules/token tracés à chaque run, car l'énergie compte autant que la vitesse.</li>
     </ul>
     <p>Chaque configuration produite par l'agent est mesurée sur un vrai GPU (H100 PCIe) et publiée en temps réel dans un dashboard HTML. Un baseline <em>human expert</em> sert de référence compétitive.</p>
   </section>
@@ -132,7 +132,7 @@
     <h3>Pourquoi Gemma 4 ?</h3>
     <p>Gemma 4 supporte nativement le <em>function calling</em> via le parser <code>--tool-call-parser gemma4</code> de vLLM. L'agent utilise cela directement : chaque action (lancer un benchmark, ajuster le power cap, faire une recherche) est exprimée comme un appel d'outil structuré, sans couche d'abstraction supplémentaire.</p>
     <h3>Charge de travail cible</h3>
-    <p>Le benchmark simule la génération de <strong>documents confidentiels</strong> (brevets pre-dépôt, rapports médicaux, articles d'investigation anonymisés) — une classe de workloads qui justifie l'inférence locale : contexte d'entrée long (300–800 tokens), sortie structurée longue, fort stress sur le KV cache et le batching.</p>
+    <p>Le benchmark simule la génération de <strong>documents confidentiels</strong> (brevets pre-dépôt, rapports médicaux, articles d'investigation anonymisés): une classe de workloads qui justifie l'inférence locale : contexte d'entrée long (300–800 tokens), sortie structurée longue, fort stress sur le KV cache et le batching.</p>
   </section>
 
   <!-- ── 3. ARCHITECTURE ── -->
@@ -156,11 +156,11 @@
       <div class="arch-row">
         <div class="arch-col">
           <div class="arch-col-title">Outils disponibles</div>
-          <div class="arch-item">🔬 <strong>run_benchmark</strong> — lance vllm bench serve</div>
-          <div class="arch-item">⚡ <strong>set_power_cap</strong> — nvidia-smi -pl</div>
-          <div class="arch-item">🌐 <strong>search_web</strong> — SerpAPI (tuning guides)</div>
-          <div class="arch-item">📄 <strong>search_papers</strong> — OpenAIRE</div>
-          <div class="arch-item">✅ <strong>report_done</strong> — arrête la boucle</div>
+          <div class="arch-item">🔬 <strong>run_benchmark</strong>: lance vllm bench serve</div>
+          <div class="arch-item">⚡ <strong>set_power_cap</strong>: nvidia-smi -pl</div>
+          <div class="arch-item">🌐 <strong>search_web</strong>: SerpAPI (tuning guides)</div>
+          <div class="arch-item">📄 <strong>search_papers</strong>: OpenAIRE</div>
+          <div class="arch-item">✅ <strong>report_done</strong>: arrête la boucle</div>
         </div>
         <div class="arch-col">
           <div class="arch-col-title">Observabilité</div>
@@ -238,7 +238,7 @@ pyproject.toml&nbsp;&nbsp;&nbsp;<span class="comment"># dépendances : pynvml, c
       <li>De commencer par l'extrémité agressive de la plage de config, puis d'adapter</li>
       <li>D'appeler <code>search_web</code> ou <code>search_papers</code> face à un résultat surprenant</li>
     </ul>
-    <p>Un <strong>fallback JSON</strong> est intégré : si vLLM ne retourne pas de <code>tool_calls</code> parsés (edge case), l'agent relance avec une demande de JSON brut. Même chemin de dispatch — la démo ne peut pas mourir sur un bug de parseur.</p>
+    <p>Un <strong>fallback JSON</strong> est intégré : si vLLM ne retourne pas de <code>tool_calls</code> parsés (edge case), l'agent relance avec une demande de JSON brut. Même chemin de dispatch: la démo ne peut pas mourir sur un bug de parseur.</p>
 
     <h3>Guardrails (<code>tools.py</code>)</h3>
     <p>Tous les arguments sont vérifiés à l'entrée. Un rejet retourne un JSON explicatif que le modèle peut lire et corriger :</p>
@@ -247,16 +247,16 @@ pyproject.toml&nbsp;&nbsp;&nbsp;<span class="comment"># dépendances : pynvml, c
     <p>La classe <code>Ctx</code> (contexte d'exécution) est entièrement <strong>injectable</strong> via <code>Ctx.for_tests()</code> : les tests unitaires n'ont pas besoin de GPU ni de serveur vLLM.</p>
 
     <h3>Mesure d'énergie (<code>power.py</code>)</h3>
-    <p><code>EnergyMeter</code> utilise <code>nvmlDeviceGetTotalEnergyConsumption</code> — le compteur cumulatif en millijoules disponible sur Volta+. Un delta d'entrée/sortie de contexte (<code>with EnergyMeter() as m:</code>) est plus précis qu'un sondage périodique. Résultat : joules totaux + watts moyens pour le run.</p>
+    <p><code>EnergyMeter</code> utilise <code>nvmlDeviceGetTotalEnergyConsumption</code>: le compteur cumulatif en millijoules disponible sur Volta+. Un delta d'entrée/sortie de contexte (<code>with EnergyMeter() as m:</code>) est plus précis qu'un sondage périodique. Résultat : joules totaux + watts moyens pour le run.</p>
 
     <h3>Dataset (<code>datasets/</code>)</h3>
     <p>30 prompts générés synthétiquement, répartis en trois classes de documents confidentiels :</p>
     <ul>
-      <li><strong>Brevets pre-dépôt</strong> — 2 scénarios de base × 5 variations de paramètres</li>
-      <li><strong>Rapports médicaux sous privilège</strong> — idem</li>
-      <li><strong>Articles d'investigation anonymisés</strong> — idem</li>
+      <li><strong>Brevets pre-dépôt</strong>: 2 scénarios de base × 5 variations de paramètres</li>
+      <li><strong>Rapports médicaux sous privilège</strong>: idem</li>
+      <li><strong>Articles d'investigation anonymisés</strong>: idem</li>
     </ul>
-    <p>300–800 tokens d'entrée, longue sortie structurée attendue. Ce profil stress le KV cache et le batching bien mieux que des tokens aléatoires — exactement ce que l'agent doit apprendre à optimiser.</p>
+    <p>300–800 tokens d'entrée, longue sortie structurée attendue. Ce profil stress le KV cache et le batching bien mieux que des tokens aléatoires: exactement ce que l'agent doit apprendre à optimiser.</p>
 
     <h3>Dashboard (<code>dashboard.html</code>)</h3>
     <p>Page HTML standalone qui poll <code>runs/state.json</code> à intervalle régulier. Affiche :</p>
@@ -278,8 +278,8 @@ pyproject.toml&nbsp;&nbsp;&nbsp;<span class="comment"># dépendances : pynvml, c
       </thead>
       <tbody>
         <tr><td>tokens/s</td><td>Débit de tokens de sortie générés</td><td>Objectif principal à maximiser</td></tr>
-        <tr><td>TTFT (ms)</td><td>Time To First Token — latence avant le premier token</td><td>Contrainte dure : ≤ 500 ms</td></tr>
-        <tr><td>ITL (ms)</td><td>Inter-Token Latency — délai entre tokens successifs</td><td>Signal de congestion mémoire</td></tr>
+        <tr><td>TTFT (ms)</td><td>Time To First Token: latence avant le premier token</td><td>Contrainte dure : ≤ 500 ms</td></tr>
+        <tr><td>ITL (ms)</td><td>Inter-Token Latency: délai entre tokens successifs</td><td>Signal de congestion mémoire</td></tr>
         <tr><td>joules/token</td><td>Énergie totale / tokens générés</td><td>Axe d'efficacité secondaire</td></tr>
         <tr><td>score</td><td><code>tokens_per_s</code> si TTFT ≤ 500 ms, sinon 0</td><td>Classement leaderboard</td></tr>
       </tbody>
@@ -294,10 +294,10 @@ pyproject.toml&nbsp;&nbsp;&nbsp;<span class="comment"># dépendances : pynvml, c
         <tr><th>Paramètre</th><th>Plage autorisée</th><th>Effet sur le système</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>max_num_seqs</code></td><td>1–512</td><td>Pression batch sur vLLM — plus élevé = meilleur débit, mais TTFT peut exploser</td></tr>
-        <tr><td><code>enable_prefix_caching</code></td><td>true / false</td><td>Réutilise les KV-cache communs entre requêtes — gain majeur sur prompts longs répétitifs</td></tr>
-        <tr><td><code>concurrency</code></td><td>1–64</td><td>Requêtes client simultanées — pilote la pression de queue</td></tr>
-        <tr><td><code>power_cap_w</code></td><td>200–350 W</td><td>Limite TDP GPU — réduit l'énergie au coût d'un léger ralentissement</td></tr>
+        <tr><td><code>max_num_seqs</code></td><td>1–512</td><td>Pression batch sur vLLM: plus élevé = meilleur débit, mais TTFT peut exploser</td></tr>
+        <tr><td><code>enable_prefix_caching</code></td><td>true / false</td><td>Réutilise les KV-cache communs entre requêtes: gain majeur sur prompts longs répétitifs</td></tr>
+        <tr><td><code>concurrency</code></td><td>1–64</td><td>Requêtes client simultanées: pilote la pression de queue</td></tr>
+        <tr><td><code>power_cap_w</code></td><td>200–350 W</td><td>Limite TDP GPU: réduit l'énergie au coût d'un léger ralentissement</td></tr>
       </tbody>
     </table>
   </section>
@@ -334,7 +334,7 @@ pip install pynvml codecarbon requests</pre>
 
     <div class="callout green">
       <strong>Design by contract, pas by prompt</strong>
-      Les guardrails sont du code Python pur — pas des instructions dans le prompt. Un argument hors plage retourne un JSON d'erreur que le modèle lit et corrige. Le système ne peut pas sortir de la plage sûre même si le modèle hallucine.
+      Les guardrails sont du code Python pur: pas des instructions dans le prompt. Un argument hors plage retourne un JSON d'erreur que le modèle lit et corrige. Le système ne peut pas sortir de la plage sûre même si le modèle hallucine.
     </div>
 
     <div class="callout green">
@@ -344,7 +344,7 @@ pip install pynvml codecarbon requests</pre>
 
     <div class="callout">
       <strong>Fallback JSON robuste</strong>
-      Si le parser de tool calls vLLM échoue sur un edge case, l'agent relance avec un prompt forçant du JSON brut. Même chemin de dispatch — la démo reste opérationnelle quoi qu'il arrive.
+      Si le parser de tool calls vLLM échoue sur un edge case, l'agent relance avec un prompt forçant du JSON brut. Même chemin de dispatch: la démo reste opérationnelle quoi qu'il arrive.
     </div>
 
     <div class="callout">

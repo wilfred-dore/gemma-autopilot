@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import type { AgentRun, Env } from "./types";
 
 /**
- * AgentHub — single Durable Object instance ("main") that:
+ * AgentHub: single Durable Object instance ("main") that:
  *  - Persists all agent runs in SQLite
  *  - Fans out real-time updates to all connected WebSocket clients
  *  - Exposes /api/push, /api/state, /api/reset and /ws
@@ -79,7 +79,7 @@ export class AgentHub extends DurableObject<Env> {
     return new Response("Not found", { status: 404 });
   }
 
-  // Hibernatable WebSocket handlers (no-ops — we only push server→client)
+  // Hibernatable WebSocket handlers (no-ops: we only push server→client)
   webSocketMessage(_ws: WebSocket, _msg: string | ArrayBuffer): void {}
   webSocketClose(_ws: WebSocket, _code: number, _reason: string): void {}
   webSocketError(_ws: WebSocket, _err: unknown): void {}

@@ -6,7 +6,7 @@ anonymized investigative articles (source protection). Each class has
 two base scenarios x five parameter variations = 10 prompts, 300-800
 input tokens each, structured long-form output expected.
 
-Synthetic and templated by design — committed alongside its output so
+Synthetic and templated by design: committed alongside its output so
 the benchmark is fully reproducible.
 """
 
@@ -131,7 +131,7 @@ def main() -> None:
         ("article", ARTICLE_BASES),
     ):
         for (topic, body), variant in itertools.product(bases, VARIANTS):
-            prompt = INSTRUCTIONS[kind].format(body=f"{topic} — {body}", variant=variant)
+            prompt = INSTRUCTIONS[kind].format(body=f"{topic}: {body}", variant=variant)
             rows.append({"prompt": prompt, "max_tokens": 512, "class": kind})
     with open("datasets/confidential_drafting.jsonl", "w") as f:
         for row in rows:

@@ -3,7 +3,7 @@
 The suite simulates the workload class that justifies local inference:
 producing confidential documents (patent claims, medical reports,
 anonymized articles) from raw notes. Long context in, long structured
-text out — it stresses KV cache and batching far better than random tokens.
+text out: it stresses KV cache and batching far better than random tokens.
 """
 
 import json

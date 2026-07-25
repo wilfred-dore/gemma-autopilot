@@ -342,10 +342,10 @@ tr.lb-viol td:last-child{color:var(--red)}
 
 <!-- ── Tiles ──────────────────────────────────────────────────────────── -->
 <div class="tiles">
-  <div class="tile"><svg class="tile-spark" id="spark-best" preserveAspectRatio="none"></svg><div class="k">Best throughput</div><div class="v green" id="t-best">—</div><div class="d" id="t-best-d">waiting for data…</div></div>
-  <div class="tile"><svg class="tile-spark" id="spark-energy" preserveAspectRatio="none"></svg><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
-  <div class="tile"><div class="k">💰 Cost impact</div><div class="v green" id="t-savings">—<span class="x-factor" id="t-savings-x" style="display:none"></span></div><div class="d" id="t-savings-d">/ month François would save on his GitHub Copilot bill</div></div>
-  <div class="tile"><svg class="tile-spark" id="spark-ttft" preserveAspectRatio="none"></svg><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-best" preserveAspectRatio="none"></svg><div class="k">Best throughput</div><div class="v green" id="t-best">-</div><div class="d" id="t-best-d">waiting for data…</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-energy" preserveAspectRatio="none"></svg><div class="k">Best energy</div><div class="v gold" id="t-energy">-</div><div class="d">joules / token ↓ better</div></div>
+  <div class="tile"><div class="k">💰 Cost impact</div><div class="v green" id="t-savings">-<span class="x-factor" id="t-savings-x" style="display:none"></span></div><div class="d" id="t-savings-d">/ month François would save on his GitHub Copilot bill</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-ttft" preserveAspectRatio="none"></svg><div class="k">Constraint</div><div class="v" id="t-ttft">-</div><div class="d">TTFT ≤ 500 ms</div></div>
 </div>
 
 <!-- ── Self-improvement arena + Magic Quadrant ─────────────────────────── -->
@@ -366,7 +366,7 @@ tr.lb-viol td:last-child{color:var(--red)}
       <div class="f-role">Teacher · reigning best</div>
       <div class="f-name" id="teacher-name">no champion yet</div>
       <div class="f-bar"><div class="f-bar-fill" id="teacher-bar"></div></div>
-      <div class="f-score" id="teacher-score">—</div>
+      <div class="f-score" id="teacher-score">-</div>
     </div>
 
     <div class="vs-wrap">
@@ -382,19 +382,19 @@ tr.lb-viol td:last-child{color:var(--red)}
       <div class="f-role" id="challenger-role">Challenger · this run</div>
       <div class="f-name" id="challenger-name">waiting…</div>
       <div class="f-bar"><div class="f-bar-fill" id="challenger-bar"></div></div>
-      <div class="f-score" id="challenger-score">—</div>
+      <div class="f-score" id="challenger-score">-</div>
     </div>
   </div>
   <div class="arena-stats" id="arena-stats">
-    <div class="a-stat"><span class="a-stat-k">Min</span><span class="a-stat-v" id="arena-min">—</span></div>
+    <div class="a-stat"><span class="a-stat-k">Min</span><span class="a-stat-v" id="arena-min">-</span></div>
     <span class="a-stat-sep">·</span>
-    <div class="a-stat"><span class="a-stat-k">Max</span><span class="a-stat-v" id="arena-max">—</span></div>
+    <div class="a-stat"><span class="a-stat-k">Max</span><span class="a-stat-v" id="arena-max">-</span></div>
   </div>
   <div class="factor-hero" id="factor-hero">
     <span class="factor-hero-label" id="arena-factor-label">Factor</span>
-    <span class="factor-hero-value" id="arena-factor">—</span>
+    <span class="factor-hero-value" id="arena-factor">-</span>
   </div>
-  <div class="arena-log" id="arena-log">No runs yet — start the autopilot to begin round 1.</div>
+  <div class="arena-log" id="arena-log">No runs yet: start the autopilot to begin round 1.</div>
 </div>
 
 <!-- ── Magic Quadrant ──────────────────────────────────────────────────── -->
@@ -460,16 +460,16 @@ tr.lb-viol td:last-child{color:var(--red)}
   <div id="how-modal">
     <span class="how-close" id="how-close">✕</span>
     <h2>⚡ How Gemma² works</h2>
-    <div class="how-sub">Gemma 4 optimizes its own deployment — and explains every decision it makes.</div>
+    <div class="how-sub">Gemma 4 optimizes its own deployment: and explains every decision it makes.</div>
     <ol class="how-steps">
-      <li><b>Benchmark</b> — the agent runs a load test against a live vLLM deployment and measures throughput, latency and energy. <span class="how-tag">tokens/s · TTFT · J/token</span></li>
-      <li><b>Diagnose</b> — Gemma 4 reads those metrics through native function calling and explains, in plain language, what's holding performance back (e.g. batching too small, no prefix caching).</li>
-      <li><b>Act</b> — it changes one lever of the deployment: quantization, batch size, prefix caching, or GPU power cap — then re-deploys.</li>
-      <li><b>Re-benchmark</b> — the new config is measured again and becomes a new node in the <b>exploration tree</b> below, scored 0 if it violates the TTFT ≤ 500 ms constraint.</li>
-      <li><b>Repeat</b> — the loop continues until gains flatten. Each new config (the <b>challenger</b>) fights the current best (the <b>teacher</b>) in the arena above; whoever scores higher becomes the new teacher.</li>
+      <li><b>Benchmark</b>: the agent runs a load test against a live vLLM deployment and measures throughput, latency and energy. <span class="how-tag">tokens/s · TTFT · J/token</span></li>
+      <li><b>Diagnose</b>: Gemma 4 reads those metrics through native function calling and explains, in plain language, what's holding performance back (e.g. batching too small, no prefix caching).</li>
+      <li><b>Act</b>: it changes one lever of the deployment: quantization, batch size, prefix caching, or GPU power cap: then re-deploys.</li>
+      <li><b>Re-benchmark</b>: the new config is measured again and becomes a new node in the <b>exploration tree</b> below, scored 0 if it violates the TTFT ≤ 500 ms constraint.</li>
+      <li><b>Repeat</b>: the loop continues until gains flatten. Each new config (the <b>challenger</b>) fights the current best (the <b>teacher</b>) in the arena above; whoever scores higher becomes the new teacher.</li>
     </ol>
     <div class="how-grid">
-      <div class="how-metric"><div class="k">⚔️ Arena</div><div class="v">Challenger vs. teacher, round after round — only improvements are crowned.</div></div>
+      <div class="how-metric"><div class="k">⚔️ Arena</div><div class="v">Challenger vs. teacher, round after round: only improvements are crowned.</div></div>
       <div class="how-metric"><div class="k">🎯 Magic Quadrant</div><div class="v">Our fine-tuned Gemma 4 plotted against the rest of the Gemma family.</div></div>
       <div class="how-metric"><div class="k">🌳 Exploration tree</div><div class="v">Every run is a node; parent → child edges show which config it evolved from.</div></div>
       <div class="how-metric"><div class="k">💰 Cost impact</div><div class="v">Best throughput translated into monthly GitHub Copilot savings.</div></div>
@@ -491,7 +491,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
-// Dev-only controls — "Demo data" / "Clear all" are only shown with ?dev=true
+// Dev-only controls: "Demo data" / "Clear all" are only shown with ?dev=true
 // ═══════════════════════════════════════════════════════════════════════════
 if (/^(1|true)$/i.test(new URLSearchParams(location.search).get('dev') || '')) {
   document.querySelectorAll('.dev-only').forEach(el => { el.style.display = ''; });
@@ -552,7 +552,7 @@ function score(run) {
 }
 
 function fmt(v, dec = 1) {
-  return v == null ? '—' : Number(v).toFixed(dec);
+  return v == null ? '-' : Number(v).toFixed(dec);
 }
 
 function nodeColor(run, isBest) {
@@ -740,8 +740,12 @@ function showTooltip(event, run, maxSc, bi) {
     ${run.metrics.itl_ms ? `<div class="tip-row"><span>ITL</span><span>${fmt(run.metrics.itl_ms,1)} ms</span></div>` : ''}
     ` : ''}
     ${run.energy?.joules_per_token ? `<div class="tip-row"><span>J/token</span><span>${fmt(run.energy.joules_per_token,4)}</span></div>` : ''}
+<<<<<<< HEAD
     <div class="tip-row"><span>Score</span><span>${s < 0 ? '—' : fmt(s)}</span></div>
     ${run.meta?.outcome ? `<div class="tip-row"><span>Outcome</span><span>${run.meta.outcome}</span></div>` : ''}
+=======
+    <div class="tip-row"><span>Score</span><span>${s < 0 ? '-' : fmt(s)}</span></div>
+>>>>>>> ceb44f2 (style: no em-dashes in UI copy)
   `;
   tip.style.display = 'block';
   moveTip(event);
@@ -789,7 +793,7 @@ function showDetail(run) {
         TTFT <span style="color:${run.metrics.ttft_ms>500?'var(--red)':'var(--green)'}">${fmt(run.metrics.ttft_ms,0)} ms</span>
         ${run.metrics.itl_ms ? `· ITL ${fmt(run.metrics.itl_ms,1)} ms` : ''}
       </dd>
-      <dt>Score</dt><dd style="color:${color};font-weight:700">${s < 0 ? '—' : fmt(s)}</dd>
+      <dt>Score</dt><dd style="color:${color};font-weight:700">${s < 0 ? '-' : fmt(s)}</dd>
     `;
   }
 
@@ -908,10 +912,10 @@ function renderLeaderboard(runs) {
       <tr class="${isBest ? 'lb-best' : ''}">
         <td><span class="rank-badge ${i===0?'r1':''}">${i+1}</span></td>
         <td>${escHtml(r.label)}${viol ? '<span class="viol-chip">TTFT</span>' : ''}</td>
-        <td>${r.metrics ? fmt(r.metrics.tokens_per_s) : '—'}</td>
-        <td style="color:${r.metrics?.ttft_ms>500?'var(--red)':'inherit'}">${r.metrics ? fmt(r.metrics.ttft_ms,0) : '—'}</td>
-        <td>${r.energy?.joules_per_token != null ? fmt(r.energy.joules_per_token,4) : '—'}</td>
-        <td style="color:${isBest?'var(--gold)':viol?'var(--red)':'inherit'};font-weight:700">${r._score >= 0 ? fmt(r._score) : '—'}</td>
+        <td>${r.metrics ? fmt(r.metrics.tokens_per_s) : '-'}</td>
+        <td style="color:${r.metrics?.ttft_ms>500?'var(--red)':'inherit'}">${r.metrics ? fmt(r.metrics.ttft_ms,0) : '-'}</td>
+        <td>${r.energy?.joules_per_token != null ? fmt(r.energy.joules_per_token,4) : '-'}</td>
+        <td style="color:${isBest?'var(--gold)':viol?'var(--red)':'inherit'};font-weight:700">${r._score >= 0 ? fmt(r._score) : '-'}</td>
       </tr>`;
   }).join('');
 }
@@ -960,10 +964,10 @@ function renderTiles(runs) {
   const allTtfts = done.filter(r => r.metrics).map(r => r.metrics.ttft_ms);
   const okCount = allTtfts.filter(t => t <= 500).length;
 
-  document.getElementById('t-best').textContent = best ? fmt(best.metrics.tokens_per_s) + ' t/s' : '—';
+  document.getElementById('t-best').textContent = best ? fmt(best.metrics.tokens_per_s) + ' t/s' : '-';
   document.getElementById('t-best-d').textContent = best ? `vs ${runs.filter(r=>r.label==='human-expert'&&r.metrics).map(r=>'human '+fmt(r.metrics.tokens_per_s)).join('')||'no baseline'}` : 'waiting for data…';
-  document.getElementById('t-energy').textContent = isFinite(bestJ) ? fmt(bestJ, 4) + ' J' : '—';
-  document.getElementById('t-ttft').textContent = done.length ? `${okCount}/${done.length} pass` : '—';
+  document.getElementById('t-energy').textContent = isFinite(bestJ) ? fmt(bestJ, 4) + ' J' : '-';
+  document.getElementById('t-ttft').textContent = done.length ? `${okCount}/${done.length} pass` : '-';
   document.getElementById('t-ttft').style.color = done.length && okCount < done.length ? 'var(--gold)' : 'var(--green)';
 
   const orderedDone = done.slice().sort((a, b) => new Date(a.ts || 0) - new Date(b.ts || 0));
@@ -1009,7 +1013,7 @@ function renderSparkline(svgId, values, color, opts = {}) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Self-improvement arena — teacher (reigning best) vs. challenger (this run)
+// Self-improvement arena: teacher (reigning best) vs. challenger (this run)
 // ═══════════════════════════════════════════════════════════════════════════
 let prevBestId = null;
 let selectedChallengerId = 'auto';
@@ -1024,7 +1028,7 @@ function populateIterSelect(runs) {
     const s = score(r);
     const scoreLabel = r.status === 'running' ? '⏳ training…' : (s > 0 ? fmt(s) + ' t/s' : 'TTFT violated');
     const crown = r.id === bestId ? ' 👑' : '';
-    options.push(`<option value="${escHtml(r.id)}">#${i + 1} ${escHtml(r.label)}${crown} — ${scoreLabel}</option>`);
+    options.push(`<option value="${escHtml(r.id)}">#${i + 1} ${escHtml(r.label)}${crown}: ${scoreLabel}</option>`);
   });
   sel.innerHTML = options.join('');
 
@@ -1050,8 +1054,8 @@ function renderArena(runs) {
   const throughputs = runs.filter(r => r.metrics).map(r => r.metrics.tokens_per_s);
   const minV = throughputs.length ? Math.min(...throughputs) : null;
   const maxV = throughputs.length ? Math.max(...throughputs) : null;
-  document.getElementById('arena-min').textContent = minV != null ? fmt(minV) + ' t/s' : '—';
-  document.getElementById('arena-max').textContent = maxV != null ? fmt(maxV) + ' t/s' : '—';
+  document.getElementById('arena-min').textContent = minV != null ? fmt(minV) + ' t/s' : '-';
+  document.getElementById('arena-max').textContent = maxV != null ? fmt(maxV) + ' t/s' : '-';
 
   // The factor reflects whichever matchup is currently on screen: the global
   // best vs. the auto-picked latest run, or teacher vs. a manually picked iteration.
@@ -1065,7 +1069,7 @@ function renderArena(runs) {
     factor = maxV / minV;
   }
   factorLabel.textContent = (teacherScoreVal > 0 && challengerScoreVal > 0) ? 'Teacher ÷ pick' : 'Max ÷ min';
-  document.getElementById('arena-factor').textContent = factor != null ? fmt(factor, 2) + '×' : '—';
+  document.getElementById('arena-factor').textContent = factor != null ? fmt(factor, 2) + '×' : '-';
 
   const maxSc = Math.max(1, 0, ...runs.filter(r => r.metrics).map(r => score(r)));
 
@@ -1080,12 +1084,12 @@ function renderArena(runs) {
   if (teacherRun) {
     teacherName.textContent = teacherRun.label;
     const s = score(teacherRun);
-    teacherScore.textContent = s > 0 ? fmt(s) + ' t/s' : '—';
+    teacherScore.textContent = s > 0 ? fmt(s) + ' t/s' : '-';
     teacherBar.classList.remove('charging');
     teacherBar.style.width = Math.max(4, Math.min(100, (s / maxSc) * 100)) + '%';
   } else {
     teacherName.textContent = 'no champion yet';
-    teacherScore.textContent = '—';
+    teacherScore.textContent = '-';
     teacherBar.classList.remove('charging');
     teacherBar.style.width = '0%';
   }
@@ -1103,7 +1107,7 @@ function renderArena(runs) {
     }
   } else {
     challengerName.textContent = 'waiting…';
-    challengerScore.textContent = '—';
+    challengerScore.textContent = '-';
     challengerBar.classList.remove('charging');
     challengerBar.style.width = '0%';
   }
@@ -1113,7 +1117,7 @@ function renderArena(runs) {
   } else if (!log.dataset.init) {
     log.textContent = teacherRun
       ? `${teacherRun.label} is the reigning champion.`
-      : 'No runs yet — start the autopilot to begin round 1.';
+      : 'No runs yet: start the autopilot to begin round 1.';
     log.dataset.init = '1';
   }
   prevBestId = bestId;
@@ -1153,7 +1157,7 @@ function spawnSparks() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Background progression chart — faint area/line of score across all runs
+// Background progression chart: faint area/line of score across all runs
 // ═══════════════════════════════════════════════════════════════════════════
 function renderProgressChart(runs) {
   const el = document.getElementById('arena-progress');
@@ -1217,7 +1221,7 @@ window.addEventListener('resize', () => renderProgressChart(allRuns));
 window.addEventListener('resize', () => renderTiles(allRuns));
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Magic Quadrant — quality (LLM-judge) vs. ability to execute (tok/s)
+// Magic Quadrant: quality (LLM-judge) vs. ability to execute (tok/s)
 // Reads public/model-comparison.json, written by `python -m autopilot.model_compare`
 // (falls back to the illustrative replay numbers shipped in that file).
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1227,7 +1231,7 @@ async function loadModelComparison() {
   try {
     const r = await fetch('model-comparison.json?t=' + Date.now());
     if (r.ok) modelComparison = await r.json();
-  } catch (e) { /* optional panel — stays empty if the file is missing */ }
+  } catch (e) { /* optional panel: stays empty if the file is missing */ }
   renderQuadrant();
   renderSavings();
 }
@@ -1240,7 +1244,7 @@ function renderQuadrant() {
 
   const models = (modelComparison?.models || []).filter(m => !m.error && m.quality_score != null);
   if (!models.length) {
-    note.textContent = 'No model-comparison data yet — run `python -m autopilot.model_compare`.';
+    note.textContent = 'No model-comparison data yet: run `python -m autopilot.model_compare`.';
     return;
   }
   note.textContent = modelComparison.objective?.note
@@ -1321,7 +1325,7 @@ window.addEventListener('resize', renderQuadrant);
 loadModelComparison();
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Cost impact — base model vs. the best (fine-tuned) one, in $/month.
+// Cost impact: base model vs. the best (fine-tuned) one, in $/month.
 // Lower LLM-judge quality means more low-quality drafts get regenerated,
 // burning another Copilot premium-request credit. We approximate that
 // "wasted retry" rate as (100 - quality_score) / 100, and count the gap
@@ -1329,7 +1333,7 @@ loadModelComparison();
 // wasted on regenerations.
 // ═══════════════════════════════════════════════════════════════════════════
 const MONTHLY_CREDITS = 400_000;   // Copilot premium-request credits spent this month
-const COST_PER_CREDIT = 0.04;      // $ — GitHub Copilot's published overage rate per premium request
+const COST_PER_CREDIT = 0.04;      // $: GitHub Copilot's published overage rate per premium request
 
 function renderSavings() {
   const tileAmountEl = document.getElementById('t-savings');
@@ -1378,7 +1382,7 @@ function render() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Iteration selector — inspect any run as the arena challenger
+// Iteration selector: inspect any run as the arena challenger
 // ═══════════════════════════════════════════════════════════════════════════
 document.getElementById('iter-select').addEventListener('change', (e) => {
   selectedChallengerId = e.target.value;
@@ -1422,7 +1426,7 @@ document.getElementById('reset-btn').onclick = async () => {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}` }
   });
-  if (!r.ok) alert('Reset failed — wrong key?');
+  if (!r.ok) alert('Reset failed: wrong key?');
   else { allRuns = []; zoomCentered = false; render(); }
 };
 
@@ -1446,16 +1450,17 @@ document.getElementById('demo-btn').onclick = () => {
       config:{max_num_seqs:512, enable_prefix_caching:true, concurrency:32},
       metrics:{tokens_per_s:158.9, ttft_ms:621, itl_ms:18.7},
       energy:{joules:1380, joules_per_token:0.0048, mean_power_w:320},
-      reasoning:'Pushed max_num_seqs to 512 — TTFT violated (621 ms > 500 ms). Backing off batch size.' },
+      reasoning:'Pushed max_num_seqs to 512: TTFT violated (621 ms > 500 ms). Backing off batch size.' },
     { id:'a3', parent_id:'a1', label:'agent-iter-3', status:'done', ts:now(),
       config:{max_num_seqs:128, enable_prefix_caching:true, concurrency:16, power_cap_w:280},
       metrics:{tokens_per_s:149.7, ttft_ms:380, itl_ms:10.4},
       energy:{joules:920, joules_per_token:0.0034, mean_power_w:278},
-      reasoning:'Reduce batch, cap power at 280W. TTFT recovers. Energy improves significantly — memory-bound not power-bound.' },
+      reasoning:'Reduce batch, cap power at 280W. TTFT recovers. Energy improves significantly: memory-bound not power-bound.' },
     { id:'a4', parent_id:'a3', label:'agent-iter-4', status:'done', ts:now(),
       config:{max_num_seqs:192, enable_prefix_caching:true, concurrency:20, power_cap_w:280},
       metrics:{tokens_per_s:161.3, ttft_ms:445, itl_ms:11.8},
       energy:{joules:975, joules_per_token:0.0033, mean_power_w:279},
+<<<<<<< HEAD
       reasoning:'Increase batch to 192 with power cap — best score so far. Gains flattening, ~1 more iteration.',
       meta:{
         action:'run_benchmark',
@@ -1466,6 +1471,9 @@ document.getElementById('demo-btn').onclick = () => {
         delta_vs_best:{ tokens_per_s:'+1.4%', joules_per_token:'-2.1%' },
         tags:['saturation','guardrail-recovery'],
       } },
+=======
+      reasoning:'Increase batch to 192 with power cap: best score so far. Gains flattening, ~1 more iteration.' },
+>>>>>>> ceb44f2 (style: no em-dashes in UI copy)
     { id:'a5', parent_id:'a4', label:'agent-iter-5', status:'running', ts:now(),
       reasoning:'Trying concurrency=24 to probe queue saturation limit before calling report_done.' },
   ];

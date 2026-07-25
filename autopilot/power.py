@@ -2,7 +2,7 @@
 
 EnergyMeter prefers the driver's cumulative energy counter
 (nvmlDeviceGetTotalEnergyConsumption, millijoules since driver load,
-available on Volta+) — a delta across the measured window beats sampling.
+available on Volta+): a delta across the measured window beats sampling.
 Backend is injectable for tests.
 """
 

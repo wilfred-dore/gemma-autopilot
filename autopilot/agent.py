@@ -2,7 +2,7 @@
 
 Native function calling via the vLLM OpenAI-compatible endpoint
 (--tool-call-parser gemma4). Fallback: if the server returns no parsed
-tool_calls, we ask for a bare-JSON action and parse it ourselves —
+tool_calls, we ask for a bare-JSON action and parse it ourselves -
 same dispatch path, so the demo cannot die on a parser edge case.
 """
 
@@ -23,7 +23,7 @@ SYSTEM_PROMPT = """You are Autopilot, an inference-optimization agent. You are G
 optimizing your own vLLM deployment on a single GPU.
 
 Objective: maximize tokens/s subject to TTFT <= 500 ms. Report joules/token as the \
-efficiency axis — energy matters as much as speed.
+efficiency axis: energy matters as much as speed.
 
 Rules:
 - Act ONLY through the provided tools, ONE call at a time.
@@ -50,7 +50,7 @@ def chat(base_url: str, messages: list, tools: list) -> dict:
 def _json_fallback(base_url: str, messages: list) -> dict | None:
     """Ask for a bare-JSON action when native tool parsing yields nothing."""
     forced = messages + [{"role": "user", "content":
-        'Reply ONLY with JSON: {"tool": "<name>", "args": {...}} — no prose.'}]
+        'Reply ONLY with JSON: {"tool": "<name>", "args": {...}}: no prose.'}]
     msg = chat(base_url, forced, tools=[])
     text = (msg.get("content") or "").strip().strip("`")
     text = text[text.find("{"): text.rfind("}") + 1]
