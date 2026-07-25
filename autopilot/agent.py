@@ -72,7 +72,8 @@ def run_loop(max_iters: int = 8, base_url: str = "http://localhost:8000",
 
     for i in range(1, max_iters + 1):
         msg = chat(base_url, messages, TOOL_SCHEMAS)
-        reasoning = (msg.get("content") or "").strip()
+        # gemma4's reasoning parser routes thinking to reasoning_content
+        reasoning = ((msg.get("reasoning_content") or "") + "\n" + (msg.get("content") or "")).strip()
         calls = msg.get("tool_calls") or []
 
         if calls:

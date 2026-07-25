@@ -31,6 +31,19 @@ class Journal:
         self.dir.mkdir(parents=True, exist_ok=True)
         self._runs: list[dict] = []
         self._reasoning: list[dict] = []
+        journal_file = self.dir / "journal.jsonl"
+        if journal_file.exists():
+            for line in journal_file.read_text().splitlines():
+                if not line.strip():
+                    continue
+                entry = json.loads(line)
+                self._runs.append(entry["run"])
+                self._reasoning.append({
+                    "iter": len(self._runs),
+                    "text": entry.get("reasoning", ""),
+                    "label": entry["run"].get("label", "?"),
+                    "ts": entry["run"].get("ts", ""),
+                })
 
     def add_run(self, run: dict, reasoning: str, label: str | None = None) -> None:
         run = dict(run)
