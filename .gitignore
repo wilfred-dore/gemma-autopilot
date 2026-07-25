@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+runs/*.json
+runs/*.jsonl
+!runs/.gitkeep
+node_modules/
+emissions.csv
+.venv/
