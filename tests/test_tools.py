@@ -30,3 +30,12 @@ def test_benchmark_dispatches_with_pending_power_cap():
 def test_unknown_tool_is_soft_error():
     out = json.loads(dispatch("rm_rf", {}, Ctx.for_tests()))
     assert "unknown tool" in out["error"]
+
+
+def test_restart_server_whitelist_and_dispatch():
+    ctx = Ctx.for_tests()
+    ctx.extra["restart_fn"] = lambda b: True
+    ok = json.loads(dispatch("restart_server", {"attention_backend": "TRITON_ATTN"}, ctx))
+    assert ok["restarted"] is True
+    bad = json.loads(dispatch("restart_server", {"attention_backend": "rm -rf /"}, ctx))
+    assert bad["error"] == "rejected"

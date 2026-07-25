@@ -43,6 +43,12 @@ TOOL_SCHEMAS = [
         "parameters": {"type": "object", "properties": {
             "query": {"type": "string"}}, "required": ["query"]}}},
     {"type": "function", "function": {
+        "name": "restart_server",
+        "description": "Restart the deployment with a different attention backend (takes ~3 min).",
+        "parameters": {"type": "object", "properties": {
+            "attention_backend": {"type": "string", "enum": ["FLASH_ATTN", "TRITON_ATTN", "FLASHINFER"]}},
+            "required": ["attention_backend"]}}},
+    {"type": "function", "function": {
         "name": "report_done",
         "description": "Stop optimizing. Call when further gains look below ~3%.",
         "parameters": {"type": "object", "properties": {
@@ -119,6 +125,20 @@ def dispatch(name: str, args: dict, ctx: Ctx) -> str:
             data = get("https://api.openaire.eu/search/publications",
                        {"keywords": args["query"], "format": "json", "size": 3})
             return json.dumps({"results": _openaire_trim(data)})
+
+        if name == "restart_server":
+            backend = str(args["attention_backend"])
+            if backend not in ("FLASH_ATTN", "TRITON_ATTN", "FLASHINFER"):
+                return json.dumps({"error": "rejected", "reason": f"backend {backend} not in whitelist"})
+            fn = ctx.extra.get("restart_fn")
+            if fn is None:
+                import subprocess
+                r = subprocess.run(["bash", "/workspace/restart_vllm.sh", backend],
+                                   capture_output=True, text=True, timeout=600)
+                ok = r.returncode == 0
+            else:
+                ok = fn(backend)
+            return json.dumps({"attention_backend": backend, "restarted": ok})
 
         if name == "report_done":
             return json.dumps({"done": True, "summary": args.get("summary", "")})
