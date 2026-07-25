@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=Google+Sans+Text:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700;800&family=Google+Sans+Text:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   /* Google Labs–style light palette: warm cream surface, saturated accents */
@@ -57,6 +57,13 @@ header .spacer{flex:1}
   font:600 13px "Google Sans Text",system-ui;padding:8px 16px;border-radius:99px;transition:.15s}
 .btn:hover{background:#ddd7bf}
 .btn.danger:hover{background:#fbe2de;color:var(--red)}
+.btn.soon{opacity:.55;cursor:not-allowed}
+.btn.soon:hover{background:var(--pill)}
+#soon-tip{position:fixed;pointer-events:none;display:none;z-index:99;
+  background:var(--ink);color:#fff;font:600 12px "Google Sans Text",system-ui;
+  padding:6px 10px;border-radius:8px;box-shadow:var(--shadow);opacity:0;
+  transition:opacity .15s}
+#soon-tip.show{display:block;opacity:1}
 
 /* ── Metric tiles ─────────────────────────────────────────────────────── */
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
@@ -161,6 +168,30 @@ tr.lb-viol td:last-child{color:var(--red)}
 .t-label{font-weight:700;color:var(--ink)}
 .t-text{font-size:12px;color:var(--ink);line-height:1.5}
 
+/* ── Matrix / edge-lab console (Agent reasoning) ─────────────────────── */
+.matrix-card{background:#050a06;box-shadow:0 0 0 1px rgba(57,255,136,.16) inset,0 10px 30px -12px rgba(0,0,0,.6);position:relative}
+.matrix-card::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(180deg,rgba(57,255,136,.05) 0 1px,transparent 1px 3px);
+  mix-blend-mode:screen}
+.matrix-card .card-head{position:relative;z-index:1;background:rgba(57,255,136,.06);
+  border-bottom:1px solid rgba(57,255,136,.22);color:#3dffa0;
+  font:700 12px "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.1em}
+.matrix-card .card-head::before{content:'●';margin-right:7px;color:#3dffa0;animation:matrixBlink 1.4s steps(1) infinite;
+  text-shadow:0 0 6px rgba(61,255,160,.8)}
+.matrix-card .card-body{position:relative;z-index:1}
+.matrix-card .trace::-webkit-scrollbar-thumb{background:rgba(61,255,160,.3)}
+.matrix-card .t-item{background:rgba(61,255,160,.05);border-left:3px solid #3dffa0;
+  font-family:"JetBrains Mono",ui-monospace,monospace}
+.matrix-card .t-item.running{border-left-color:#ffd400;animation:matrixPulse 1.5s ease-in-out infinite}
+.matrix-card .t-meta{color:rgba(140,255,190,.55)}
+.matrix-card .t-label{color:#3dffa0;text-shadow:0 0 6px rgba(61,255,160,.4)}
+.matrix-card .t-label::before{content:'$ ';opacity:.7}
+.matrix-card .t-text{color:#c9ffe0}
+.matrix-card .t-cursor{display:inline-block;color:#3dffa0;animation:matrixBlink .9s steps(1) infinite;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding-left:2px}
+@keyframes matrixPulse{50%{border-left-color:#3dffa0}}
+@keyframes matrixBlink{50%{opacity:.15}}
+
 /* ── Legend ───────────────────────────────────────────────────────────── */
 .legend{display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--ink2)}
 .legend-item{display:flex;align-items:center;gap:6px}
@@ -244,6 +275,11 @@ tr.lb-viol td:last-child{color:var(--red)}
   </div>
   <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
   <span class="spacer"></span>
+  <a class="btn" id="github-btn" href="https://github.com/wilfred-dore/gemma-autopilot" target="_blank" rel="noopener noreferrer" title="View source on GitHub" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+    GitHub
+  </a>
+  <button class="btn soon" id="hf-btn" title="Coming soon" style="display:inline-flex;align-items:center;gap:6px">🤗 Hugging Face</button>
   <button class="btn dev-only" id="demo-btn" title="Load sample data to preview the UI" style="display:none">Demo data</button>
   <button class="btn danger dev-only" id="reset-btn" title="Delete all runs from the server" style="display:none">Clear all</button>
 </header>
@@ -297,7 +333,7 @@ tr.lb-viol td:last-child{color:var(--red)}
     <span class="a-stat-sep">·</span>
     <div class="a-stat"><span class="a-stat-k">Max</span><span class="a-stat-v" id="arena-max">—</span></div>
     <span class="a-stat-sep">·</span>
-    <div class="a-stat"><span class="a-stat-k">Max ÷ Min</span><span class="a-stat-v factor" id="arena-factor">—</span></div>
+    <div class="a-stat"><span class="a-stat-k" id="arena-factor-label">Factor</span><span class="a-stat-v factor" id="arena-factor">—</span></div>
   </div>
   <div class="arena-log" id="arena-log">No runs yet — start the autopilot to begin round 1.</div>
 </div>
@@ -323,10 +359,10 @@ tr.lb-viol td:last-child{color:var(--red)}
   </div>
 
   <!-- Reasoning trace sidebar -->
-  <div class="card" style="overflow:hidden">
-    <div class="card-head">Agent reasoning</div>
+  <div class="card matrix-card" style="overflow:hidden">
+    <div class="card-head">agent_reasoning.log</div>
     <div class="card-body" style="padding:10px">
-      <div class="trace" id="trace"><p style="color:var(--ink2);font-size:13px">No reasoning yet.</p></div>
+      <div class="trace" id="trace"><p style="color:rgba(140,255,190,.55);font-size:13px;font-family:'JetBrains Mono',ui-monospace,monospace">// no reasoning yet.</p></div>
     </div>
   </div>
 </div>
@@ -374,6 +410,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 
 <!-- ── Tooltip ──────────────────────────────────────────────────────────── -->
 <div id="tooltip"></div>
+<div id="soon-tip">Coming soon 🤗</div>
 
 <!-- ── Detail panel ─────────────────────────────────────────────────────── -->
 <div id="detail">
@@ -758,7 +795,7 @@ function renderTrace(runs) {
   const withReasoning = [...runs].reverse().filter(r => r.reasoning);
   const el = document.getElementById('trace');
   if (!withReasoning.length) {
-    el.innerHTML = '<p style="color:var(--ink2);font-size:13px">No reasoning yet.</p>';
+    el.innerHTML = '<p style="color:rgba(140,255,190,.55);font-size:13px;font-family:\'JetBrains Mono\',ui-monospace,monospace">// no reasoning yet.</p>';
     return;
   }
   el.innerHTML = withReasoning.map(r => `
@@ -770,7 +807,7 @@ function renderTrace(runs) {
       </div>
       <div class="t-text">${escHtml(r.reasoning.slice(0, 300))}${r.reasoning.length > 300 ? '…' : ''}</div>
     </div>
-  `).join('');
+  `).join('') + '<span class="t-cursor">▋</span>';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -877,9 +914,21 @@ function renderArena(runs) {
   const throughputs = runs.filter(r => r.metrics).map(r => r.metrics.tokens_per_s);
   const minV = throughputs.length ? Math.min(...throughputs) : null;
   const maxV = throughputs.length ? Math.max(...throughputs) : null;
-  const factor = (minV != null && minV > 0) ? maxV / minV : null;
   document.getElementById('arena-min').textContent = minV != null ? fmt(minV) + ' t/s' : '—';
   document.getElementById('arena-max').textContent = maxV != null ? fmt(maxV) + ' t/s' : '—';
+
+  // The factor reflects whichever matchup is currently on screen: the global
+  // best vs. the auto-picked latest run, or teacher vs. a manually picked iteration.
+  const teacherScoreVal = teacherRun ? score(teacherRun) : null;
+  const challengerScoreVal = (challengerRun && challengerRun.status !== 'running') ? score(challengerRun) : null;
+  const factorLabel = document.getElementById('arena-factor-label');
+  let factor = null;
+  if (teacherScoreVal > 0 && challengerScoreVal > 0) {
+    factor = Math.max(teacherScoreVal, challengerScoreVal) / Math.min(teacherScoreVal, challengerScoreVal);
+  } else if (minV != null && maxV != null && minV > 0) {
+    factor = maxV / minV;
+  }
+  factorLabel.textContent = (teacherScoreVal > 0 && challengerScoreVal > 0) ? 'Teacher ÷ pick' : 'Max ÷ min';
   document.getElementById('arena-factor').textContent = factor != null ? fmt(factor, 2) + '×' : '—';
 
   const maxSc = Math.max(1, 0, ...runs.filter(r => r.metrics).map(r => score(r)));
@@ -1191,6 +1240,22 @@ function render() {
 document.getElementById('iter-select').addEventListener('change', (e) => {
   selectedChallengerId = e.target.value;
   renderArena(allRuns);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Hugging Face button (coming soon)
+// ═══════════════════════════════════════════════════════════════════════════
+const hfBtn = document.getElementById('hf-btn');
+const soonTip = document.getElementById('soon-tip');
+let soonTimer = null;
+hfBtn.addEventListener('click', () => {
+  const r = hfBtn.getBoundingClientRect();
+  soonTip.style.left = `${r.left + r.width / 2}px`;
+  soonTip.style.top = `${r.bottom + 8}px`;
+  soonTip.style.transform = 'translateX(-50%)';
+  soonTip.classList.add('show');
+  clearTimeout(soonTimer);
+  soonTimer = setTimeout(() => soonTip.classList.remove('show'), 1600);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
