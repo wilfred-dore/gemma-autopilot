@@ -24,3 +24,17 @@ Every run documents hardware, model variant, precision and concurrency, and ever
 ## The recorded session, decision by decision
 
 The full narrative (every agent quote, parameter set, result and outcome, plus the system block describing the exact experimental setup) is in [`assets/sessions/decisions.json`](assets/sessions/decisions.json). Highlights, verbatim from the journal: the agent opened with a deliberate probe ("initiating a baseline probe to establish the current performance ceiling"), diagnosed under-utilization from a healthy TTFT ("concurrency of 1... significantly under-utilizing the H100"), was rejected by its own guardrail at concurrency 128 and adapted ("exceeded the hard guardrail of 64... I will test the maximum allowed"), and converged at 1,377.5 tok/s, beating both the defaults (+239%) and our engineer's hand-tune (+6.8%).
+
+## A concrete deployment: air-gapped Industry 4.0
+
+In a high-precision factory (aerospace, defense) IP protection forbids any internet link. Gemma 4's edge variants (E2B/E4B, natively multimodal) on local hardware such as NVIDIA Jetson can inspect video for microscopic defects, listen to machine acoustics for predictive maintenance, and act agentically through native function calling (for example commanding a PLC to stop a faulty line). No data ever leaves the site; latency stays on the floor. Gemma² is the piece that makes this class of local deployment efficient enough to run.
+
+```mermaid
+flowchart LR
+  subgraph AIRGAP["Air-gapped factory network"]
+    CAM[Inspection cameras] --> G4["Gemma 4 E4B on Jetson (multimodal)"]
+    MIC[Machine acoustics] --> G4
+    G4 -->|native function calling| PLC["PLC: stop line / flag defect"]
+    OPT["Gemma² optimizer loop"] -->|tunes serving config, measures J/token| G4
+  end
+```
