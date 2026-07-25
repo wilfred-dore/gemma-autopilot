@@ -10,7 +10,7 @@ Working notes on the max-exploration branch. Goal: a measured MAX column next to
 | 2 | pixi + max-nightly, RunPod H100 SXM pod | `max serve` compiled the "vision + language" graph for 28 minutes, then worker Killed (OOM) at 15:26. Sentinel kept polling a dead server. Logs preserved: `/workspace/sprint.log`, `/workspace/max-serve.log` on pod vbojpsjqrs1m6v (stopped) |
 | 3 | official Docker image `modular/max-nvidia-full:latest`, RunPod H100, `--model-path google/gemma-4-12B-it` | container crash-loop (uptime resets to seconds, CPU/GPU 0%); port never opened in 40 min; pod stopped |
 | 4 | same image, RunPod A40, `--model-path google/gemma-4-E4B-it` | same instant crash-loop on a different GPU and model size: systemic, not OOM. Diagnosis: the stable `latest` tag predates Gemma 4 day-zero support, which lives in the nightlies (hence the handbook's max-nightly channel) |
-| 5 | `modular/max-nvidia-full:nightly` (built 2026-07-25, the day-zero build), RunPod A40, E4B | in flight (pod khep922hntchw7) |
+| 5 | `modular/max-nvidia-full:nightly` (built 2026-07-25, the day-zero build), RunPod A40, E4B | same crash-loop (uptime 7s after 35 min rented). Not an architecture-support issue alone, then. Open hypotheses: A40 is Ampere (SM86) and the day-zero kernels may target Hopper/Blackwell; gated-model auth failing repeatedly; entrypoint arg mismatch. Undiagnosable blind: RunPod's GraphQL API does not expose container logs |
 
 ## Lessons
 
@@ -31,8 +31,10 @@ python3 scripts/max_bench.py \
 
 Caveat for honest reporting: remote benchmarks inflate TTFT with network latency; throughput at concurrency stays server-bound. Never present these numbers as same-venue comparisons with the H100 journal.
 
-## Next
+## Next (Monday session)
 
+- Debug with eyes: run the nightly image on a machine where docker logs are readable (RunPod web console, or a VM), the crash reason is one `docker logs` away. Blind GraphQL-only debugging was tonight's real handicap.
+- Retry nightly on Hopper (H100/L40S) in case the day-zero kernels have an Ampere floor.
 - If a pod serves: run max_bench at concurrency 1 and 8, record JSON here, then stop the pod.
 - Reproduce locally later: `docker run --gpus 1 -p 8000:8000 -e HF_TOKEN=... modular/max-nvidia-full:latest --model-path google/gemma-4-E4B-it`
 - Point the autopilot loop at a MAX endpoint (one env var) and let the agent compare stacks itself: the multi-stack story becomes a recorded session.
