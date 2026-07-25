@@ -37,12 +37,12 @@ why and recover with a corrected action.
 
 
 def chat(base_url: str, messages: list, tools: list) -> dict:
-    r = requests.post(
-        f"{base_url}/v1/chat/completions",
-        json={"model": BRAIN_MODEL, "messages": messages, "tools": tools,
-              "tool_choice": "auto", "temperature": 0.4, "max_tokens": 1024},
-        timeout=300,
-    )
+    payload = {"model": BRAIN_MODEL, "messages": messages,
+               "temperature": 0.4, "max_tokens": 1024}
+    if tools:  # vLLM rejects tool_choice with an empty tools list
+        payload["tools"] = tools
+        payload["tool_choice"] = "auto"
+    r = requests.post(f"{base_url}/v1/chat/completions", json=payload, timeout=300)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]
 
