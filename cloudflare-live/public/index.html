@@ -65,6 +65,33 @@ header .spacer{flex:1}
   transition:opacity .15s}
 #soon-tip.show{display:block;opacity:1}
 
+/* ── How-it-works modal ──────────────────────────────────────────────── */
+#how-overlay{position:fixed;inset:0;z-index:100;background:rgba(22,21,15,.45);backdrop-filter:blur(2px);
+  display:none;align-items:flex-start;justify-content:center;padding:60px 20px;overflow-y:auto}
+#how-overlay.open{display:flex}
+#how-modal{position:relative;width:100%;max-width:680px;background:var(--surf);border-radius:24px;
+  box-shadow:var(--shadow);padding:28px 30px 32px;animation:how-in .18s ease-out}
+@keyframes how-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+#how-modal h2{font-size:20px;font-weight:800;letter-spacing:-.01em;margin-bottom:4px}
+#how-modal .how-sub{font-size:13px;color:var(--ink2);margin-bottom:18px}
+#how-modal .how-close{position:absolute;top:20px;right:22px;cursor:pointer;font-size:18px;color:var(--ink2);
+  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.15s}
+#how-modal .how-close:hover{background:var(--pill);color:var(--ink)}
+.how-steps{list-style:none;counter-reset:how-step;margin:0 0 18px;padding:0}
+.how-steps li{counter-increment:how-step;position:relative;padding:0 0 16px 40px;font-size:13.5px;line-height:1.55}
+.how-steps li:last-child{padding-bottom:0}
+.how-steps li::before{content:counter(how-step);position:absolute;left:0;top:0;width:26px;height:26px;
+  border-radius:50%;background:var(--pill);color:var(--ink);font:700 12px "Google Sans",system-ui;
+  display:flex;align-items:center;justify-content:center}
+.how-steps li b{color:var(--ink)}
+.how-steps li .how-tag{display:inline-block;font:600 11px "JetBrains Mono",monospace;color:var(--purple);
+  background:color-mix(in srgb, var(--purple) 12%, transparent);border-radius:6px;padding:1px 6px;margin-left:4px}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+@media(max-width:520px){.how-grid{grid-template-columns:1fr}}
+.how-metric{background:var(--pill);border-radius:14px;padding:10px 12px}
+.how-metric .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin-bottom:2px}
+.how-metric .v{font-size:12.5px;color:var(--ink)}
+
 /* ── Metric tiles ─────────────────────────────────────────────────────── */
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
 .tile{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
@@ -279,6 +306,7 @@ tr.lb-viol td:last-child{color:var(--red)}
   </div>
   <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
   <span class="spacer"></span>
+  <button class="btn" id="how-btn" title="How does this work?" style="display:inline-flex;align-items:center;gap:6px">❓ How it works</button>
   <a class="btn" id="github-btn" href="https://github.com/wilfred-dore/gemma-autopilot" target="_blank" rel="noopener noreferrer" title="View source on GitHub" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">
     <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
     GitHub
@@ -402,6 +430,29 @@ tr.lb-viol td:last-child{color:var(--red)}
 </div>
 
 </div><!-- /page -->
+
+<!-- ── How-it-works modal ──────────────────────────────────────────────── -->
+<div id="how-overlay">
+  <div id="how-modal">
+    <span class="how-close" id="how-close">✕</span>
+    <h2>⚡ How Gemma² works</h2>
+    <div class="how-sub">Gemma 4 optimizes its own deployment — and explains every decision it makes.</div>
+    <ol class="how-steps">
+      <li><b>Benchmark</b> — the agent runs a load test against a live vLLM deployment and measures throughput, latency and energy. <span class="how-tag">tokens/s · TTFT · J/token</span></li>
+      <li><b>Diagnose</b> — Gemma 4 reads those metrics through native function calling and explains, in plain language, what's holding performance back (e.g. batching too small, no prefix caching).</li>
+      <li><b>Act</b> — it changes one lever of the deployment: quantization, batch size, prefix caching, or GPU power cap — then re-deploys.</li>
+      <li><b>Re-benchmark</b> — the new config is measured again and becomes a new node in the <b>exploration tree</b> below, scored 0 if it violates the TTFT ≤ 500 ms constraint.</li>
+      <li><b>Repeat</b> — the loop continues until gains flatten. Each new config (the <b>challenger</b>) fights the current best (the <b>teacher</b>) in the arena above; whoever scores higher becomes the new teacher.</li>
+    </ol>
+    <div class="how-grid">
+      <div class="how-metric"><div class="k">⚔️ Arena</div><div class="v">Challenger vs. teacher, round after round — only improvements are crowned.</div></div>
+      <div class="how-metric"><div class="k">🎯 Magic Quadrant</div><div class="v">Our fine-tuned Gemma 4 plotted against the rest of the Gemma family.</div></div>
+      <div class="how-metric"><div class="k">🌳 Exploration tree</div><div class="v">Every run is a node; parent → child edges show which config it evolved from.</div></div>
+      <div class="how-metric"><div class="k">💰 Cost impact</div><div class="v">Best throughput translated into monthly GitHub Copilot savings.</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--ink2)">Built in one day at the Paris Gemma 4 Hackathon (42 Paris). <a href="https://github.com/wilfred-dore/gemma-autopilot" target="_blank" rel="noopener noreferrer">Source on GitHub ↗</a></div>
+  </div>
+</div>
 
 <!-- ── Tooltip ──────────────────────────────────────────────────────────── -->
 <div id="tooltip"></div>
@@ -1244,6 +1295,17 @@ document.getElementById('iter-select').addEventListener('change', (e) => {
   selectedChallengerId = e.target.value;
   renderArena(allRuns);
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// How-it-works modal
+// ═══════════════════════════════════════════════════════════════════════════
+const howOverlay = document.getElementById('how-overlay');
+function openHow() { howOverlay.classList.add('open'); }
+function closeHow() { howOverlay.classList.remove('open'); }
+document.getElementById('how-btn').addEventListener('click', openHow);
+document.getElementById('how-close').addEventListener('click', closeHow);
+howOverlay.addEventListener('click', (e) => { if (e.target === howOverlay) closeHow(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHow(); });
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Hugging Face button (coming soon)
