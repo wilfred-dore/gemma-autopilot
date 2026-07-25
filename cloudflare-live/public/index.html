@@ -172,8 +172,10 @@ tr.lb-viol td:last-child{color:var(--red)}
   pointer-events:none;opacity:.55;z-index:0;display:block}
 .arena{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:14px;padding:30px 18px 8px;flex-wrap:wrap}
 .fighter{display:flex;flex-direction:column;align-items:center;width:190px;text-align:center;position:relative}
-.crown-badge{position:absolute;top:-16px;font-size:20px;animation:crownBob 2.2s ease-in-out infinite}
-@keyframes crownBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-4px) rotate(8deg)}}
+.crown-badge{position:absolute;top:-22px;left:50%;font-size:30px;line-height:1;z-index:2;
+  filter:drop-shadow(0 3px 5px rgba(232,166,0,.55));
+  animation:crownBob 2.2s ease-in-out infinite;pointer-events:none}
+@keyframes crownBob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-6deg)}50%{transform:translateX(-50%) translateY(-4px) rotate(6deg)}}
 .avatar{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   box-shadow:var(--shadow);margin-bottom:10px;animation:bob 3s ease-in-out infinite;position:relative}
 .fighter.teacher .avatar{background:radial-gradient(circle at 32% 30%,#fff8df 0%,#f6dd9a 70%)}
