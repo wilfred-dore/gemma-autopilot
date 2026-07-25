@@ -288,7 +288,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 <div class="tiles">
   <div class="tile"><svg class="tile-spark" id="spark-best" preserveAspectRatio="none"></svg><div class="k">Best throughput</div><div class="v green" id="t-best">—</div><div class="d" id="t-best-d">waiting for data…</div></div>
   <div class="tile"><svg class="tile-spark" id="spark-energy" preserveAspectRatio="none"></svg><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
-  <div class="tile"><svg class="tile-spark" id="spark-iters" preserveAspectRatio="none"></svg><div class="k">Total runs</div><div class="v blue" id="t-iters">0</div><div class="d" id="t-active">0 active</div></div>
+  <div class="tile"><div class="k">💰 Cost impact</div><div class="v green" id="t-savings">—</div><div class="d" id="t-savings-d">/ month saved vs. base model</div></div>
   <div class="tile"><svg class="tile-spark" id="spark-ttft" preserveAspectRatio="none"></svg><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
 </div>
 
@@ -815,7 +815,6 @@ function renderTrace(runs) {
 // ═══════════════════════════════════════════════════════════════════════════
 function renderTiles(runs) {
   const done = runs.filter(r => r.status === 'done' && r.metrics);
-  const active = runs.filter(r => r.status === 'running').length;
   const best = done.filter(r => score(r) > 0).sort((a,b) => score(b)-score(a))[0];
   const bestJ = done.reduce((m, r) => r.energy?.joules_per_token < m ? r.energy.joules_per_token : m, Infinity);
   const allTtfts = done.filter(r => r.metrics).map(r => r.metrics.ttft_ms);
@@ -824,15 +823,12 @@ function renderTiles(runs) {
   document.getElementById('t-best').textContent = best ? fmt(best.metrics.tokens_per_s) + ' t/s' : '—';
   document.getElementById('t-best-d').textContent = best ? `vs ${runs.filter(r=>r.label==='human-expert'&&r.metrics).map(r=>'human '+fmt(r.metrics.tokens_per_s)).join('')||'no baseline'}` : 'waiting for data…';
   document.getElementById('t-energy').textContent = isFinite(bestJ) ? fmt(bestJ, 4) + ' J' : '—';
-  document.getElementById('t-iters').textContent = runs.length;
-  document.getElementById('t-active').textContent = `${active} active`;
   document.getElementById('t-ttft').textContent = done.length ? `${okCount}/${done.length} pass` : '—';
   document.getElementById('t-ttft').style.color = done.length && okCount < done.length ? 'var(--gold)' : 'var(--green)';
 
   const orderedDone = done.slice().sort((a, b) => new Date(a.ts || 0) - new Date(b.ts || 0));
   renderSparkline('spark-best', orderedDone.map(r => r.metrics.tokens_per_s), '#1e9e5f');
   renderSparkline('spark-energy', orderedDone.map(r => r.energy?.joules_per_token).filter(v => v != null), '#e8a600', { invert: true });
-  renderSparkline('spark-iters', runs.map((_, i) => i + 1), '#4285f4');
   renderSparkline('spark-ttft', orderedDone.map(r => r.metrics.ttft_ms), okCount < done.length ? '#e8a600' : '#1e9e5f', { invert: true });
 }
 
@@ -1198,11 +1194,14 @@ const COST_PER_CREDIT = 0.04;      // $ — GitHub Copilot's published overage r
 function renderSavings() {
   const amountEl = document.getElementById('savings-amount');
   const detailEl = document.getElementById('savings-detail');
+  const tileAmountEl = document.getElementById('t-savings');
+  const tileDetailEl = document.getElementById('t-savings-d');
   const models = (modelComparison?.models || []).filter(m => !m.error && m.quality_score != null);
   const base = models.find(m => !m.finetuned && /base/i.test(m.label));
   const best = models.filter(m => m.finetuned).sort((a, b) => b.quality_score - a.quality_score)[0];
   if (!base || !best) {
     detailEl.textContent = 'No model-comparison data yet — run `python -m autopilot.model_compare`.';
+    tileDetailEl.textContent = 'no model-comparison data yet';
     return;
   }
 
@@ -1211,8 +1210,9 @@ function renderSavings() {
   const savedFraction = Math.max(0, baseRetry - bestRetry);
   const monthlySpend = MONTHLY_CREDITS * COST_PER_CREDIT;
   const monthlySavings = monthlySpend * savedFraction;
+  const amountText = '$' + monthlySavings.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
-  amountEl.textContent = '$' + monthlySavings.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  amountEl.textContent = amountText;
   detailEl.innerHTML = `
     <div><b>${escHtml(best.label.replace(' (fine-tuned, ours)', ''))}</b> hits <b>${fmt(best.quality_score)}</b> quality
     vs <b>${fmt(base.quality_score)}</b> for the base model — <b>${fmt(savedFraction * 100, 1)}%</b> fewer low-quality
@@ -1220,6 +1220,9 @@ function renderSavings() {
     <div style="margin-top:6px">${MONTHLY_CREDITS.toLocaleString('en-US')} credits/mo × $${COST_PER_CREDIT.toFixed(2)}/credit
     = $${monthlySpend.toLocaleString('en-US')} spend · ${fmt(savedFraction * 100, 1)}% saved.</div>
   `;
+
+  tileAmountEl.textContent = amountText;
+  tileDetailEl.textContent = `/ month · ${fmt(savedFraction * 100, 1)}% fewer retries`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
