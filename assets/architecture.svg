@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a78d6"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52514e"/>
+    </marker>
+  </defs>
+  <rect width="960" height="460" fill="#fcfcfb"/>
+  <text x="480" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0b0b0b">Gemma Autopilot: the feedback loop</text>
+  <text x="480" y="54" text-anchor="middle" font-size="12" fill="#52514e">Gemma 4 optimizes its own deployment. Objective: max tokens/s, TTFT under 500 ms, energy on the record.</text>
+
+  <!-- Agent box -->
+  <rect x="60" y="120" width="240" height="120" rx="12" fill="#ffffff" stroke="#2a78d6" stroke-width="2"/>
+  <text x="180" y="150" text-anchor="middle" font-size="15" font-weight="700" fill="#0b0b0b">Gemma 4 agent (the brain)</text>
+  <text x="180" y="172" text-anchor="middle" font-size="11" fill="#52514e">native function calling (gemma4 parser)</text>
+  <text x="180" y="190" text-anchor="middle" font-size="11" fill="#52514e">DIAGNOSE: reads metrics, explains why</text>
+  <text x="180" y="208" text-anchor="middle" font-size="11" fill="#52514e">DECIDE: next action, one tool call</text>
+
+  <!-- Guardrails -->
+  <rect x="330" y="132" width="150" height="96" rx="10" fill="#ffffff" stroke="#e3e2dc"/>
+  <text x="405" y="158" text-anchor="middle" font-size="13" font-weight="600" fill="#0b0b0b">Guardrails</text>
+  <text x="405" y="176" text-anchor="middle" font-size="10.5" fill="#52514e">whitelisted tools only</text>
+  <text x="405" y="192" text-anchor="middle" font-size="10.5" fill="#52514e">bounded ranges</text>
+  <text x="405" y="208" text-anchor="middle" font-size="10.5" fill="#52514e">rejections are readable</text>
+
+  <!-- Deployment box -->
+  <rect x="660" y="120" width="240" height="120" rx="12" fill="#ffffff" stroke="#2a78d6" stroke-width="2"/>
+  <text x="780" y="150" text-anchor="middle" font-size="15" font-weight="700" fill="#0b0b0b">Gemma 4 deployment</text>
+  <text x="780" y="172" text-anchor="middle" font-size="11" fill="#52514e">vLLM on H100 (the workload)</text>
+  <text x="780" y="190" text-anchor="middle" font-size="11" fill="#52514e">ACT: batch, prefix cache, concurrency,</text>
+  <text x="780" y="208" text-anchor="middle" font-size="11" fill="#52514e">model variant / QAT, GPU power cap</text>
+
+  <!-- forward arrows -->
+  <line x1="300" y1="180" x2="330" y2="180" stroke="#2a78d6" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="480" y1="180" x2="660" y2="180" stroke="#2a78d6" stroke-width="2" marker-end="url(#a)"/>
+  <text x="570" y="170" text-anchor="middle" font-size="11" fill="#2a78d6">apply config</text>
+
+  <!-- MEASURE box -->
+  <rect x="600" y="290" width="300" height="84" rx="12" fill="#ffffff" stroke="#e3e2dc"/>
+  <text x="750" y="316" text-anchor="middle" font-size="13" font-weight="600" fill="#0b0b0b">MEASURE: bench_runner + power</text>
+  <text x="750" y="336" text-anchor="middle" font-size="10.5" fill="#52514e">30-prompt confidential-drafting suite</text>
+  <text x="750" y="352" text-anchor="middle" font-size="10.5" fill="#52514e">tokens/s, TTFT, ITL + NVML joules/token</text>
+
+  <!-- deployment -> measure -->
+  <line x1="780" y1="240" x2="780" y2="290" stroke="#2a78d6" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- FEEDBACK arrow (the loop) -->
+  <path d="M 600 332 C 320 332, 180 320, 180 240" fill="none" stroke="#2a78d6" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="380" y="322" text-anchor="middle" font-size="12" font-weight="600" fill="#2a78d6">FEEDBACK: metrics + energy return to the brain</text>
+
+  <!-- journal/dashboard tap -->
+  <rect x="60" y="290" width="240" height="84" rx="12" fill="#ffffff" stroke="#e3e2dc"/>
+  <text x="180" y="316" text-anchor="middle" font-size="13" font-weight="600" fill="#0b0b0b">Journal + live leaderboard</text>
+  <text x="180" y="336" text-anchor="middle" font-size="10.5" fill="#52514e">every run and every explanation logged</text>
+  <text x="180" y="352" text-anchor="middle" font-size="10.5" fill="#52514e">human-expert baseline on the same board</text>
+  <line x1="180" y1="240" x2="180" y2="290" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#g)"/>
+
+  <!-- external knowledge -->
+  <rect x="330" y="60" width="300" height="34" rx="10" fill="#ffffff" stroke="#e3e2dc"/>
+  <text x="480" y="82" text-anchor="middle" font-size="11" fill="#52514e">external knowledge: SerpApi (web) + OpenAIRE (papers)</text>
+  <line x1="330" y1="80" x2="240" y2="120" stroke="#52514e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#g)"/>
+
+  <text x="480" y="430" text-anchor="middle" font-size="11" fill="#52514e">The loop stops when the agent judges further gains below ~3% and calls report_done. Failures are diagnosed and recovered, not retried blindly.</text>
+</svg>
