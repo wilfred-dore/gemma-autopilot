@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone helper to push a single agent run to the Gemma Autopilot live dashboard.
+"""Standalone helper to push a single agent run to the Gemma² live dashboard.
 
 Usage examples:
 

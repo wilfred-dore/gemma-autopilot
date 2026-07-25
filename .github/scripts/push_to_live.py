@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GitHub Actions script: push benchmark runs to the Gemma Autopilot live dashboard.
+GitHub Actions script: push benchmark runs to the Gemma² live dashboard.
 
 Reads SOURCE and RESET_FIRST from env (set by the workflow).
 Data sources:

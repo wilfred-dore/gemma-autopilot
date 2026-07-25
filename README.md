@@ -1,4 +1,4 @@
-# Gemma Autopilot
+# Gemma²
 
 **Gemma 4 optimizes its own deployment: and explains every decision.**
 

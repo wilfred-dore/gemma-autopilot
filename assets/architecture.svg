@@ -8,7 +8,7 @@
     </marker>
   </defs>
   <rect width="960" height="460" fill="#fcfcfb"/>
-  <text x="480" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0b0b0b">Gemma Autopilot: the feedback loop</text>
+  <text x="480" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0b0b0b">Gemma²: the feedback loop</text>
   <text x="480" y="54" text-anchor="middle" font-size="12" fill="#52514e">Gemma 4 optimizes its own deployment. Objective: max tokens/s, TTFT under 500 ms, energy on the record.</text>
 
   <!-- Agent box -->

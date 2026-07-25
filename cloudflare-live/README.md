@@ -1,4 +1,4 @@
-# Gemma Autopilot · Live Dashboard
+# Gemma² · Live Dashboard
 
 Real-time Cloudflare Workers app that visualises agent runs as they happen — exploration tree, leaderboard, reasoning trace, energy metrics.
 

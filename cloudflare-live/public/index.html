@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gemma Autopilot · Live</title>
+<title>Gemma² · Live</title>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,6 +79,9 @@ header .spacer{flex:1}
 .card-head{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);
   font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
 .card-body{padding:14px 18px}
+.iter-select{margin-left:auto;font:600 12px "Google Sans Text",system-ui;text-transform:none;letter-spacing:normal;
+  color:var(--ink);background:var(--pill);border:none;border-radius:99px;padding:6px 12px;cursor:pointer;max-width:220px}
+.iter-select:hover{background:#ddd7bf}
 
 /* ── Tree ─────────────────────────────────────────────────────────────── */
 #tree-wrap{overflow:hidden;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow)}
@@ -226,7 +229,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 <header>
   <div>
     <span class="eyebrow">Google-style AI Lab · Live run</span>
-    <h1>⚡ Gemma Autopilot</h1>
+    <h1>⚡ Gemma²</h1>
   </div>
   <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
   <span class="spacer"></span>
@@ -244,7 +247,11 @@ tr.lb-viol td:last-child{color:var(--red)}
 
 <!-- ── Self-improvement arena ───────────────────────────────────────────── -->
 <div class="card" id="arena-card" style="margin-bottom:12px">
-  <div class="card-head">⚔️ Self-improvement arena <span style="font-weight:400;margin-left:4px">the challenger fights the teacher, round after round</span></div>
+  <div class="card-head">⚔️ Self-improvement arena <span style="font-weight:400;margin-left:4px">the challenger fights the teacher, round after round</span>
+    <select class="iter-select" id="iter-select" title="Inspect any iteration as the challenger">
+      <option value="auto">Auto · latest run</option>
+    </select>
+  </div>
   <svg id="arena-progress" preserveAspectRatio="none"></svg>
   <div class="arena">
     <div class="fighter teacher" id="fighter-teacher">
@@ -801,12 +808,40 @@ function renderSparkline(svgId, values, color, opts = {}) {
 // Self-improvement arena — teacher (reigning best) vs. challenger (this run)
 // ═══════════════════════════════════════════════════════════════════════════
 let prevBestId = null;
+let selectedChallengerId = 'auto';
+
+function populateIterSelect(runs) {
+  const sel = document.getElementById('iter-select');
+  if (!sel) return;
+  const prev = sel.value || selectedChallengerId;
+
+  const options = ['<option value="auto">Auto · latest run</option>'];
+  runs.forEach((r, i) => {
+    const s = score(r);
+    const scoreLabel = r.status === 'running' ? '⏳ training…' : (s > 0 ? fmt(s) + ' t/s' : 'TTFT violated');
+    const crown = r.id === bestId ? ' 👑' : '';
+    options.push(`<option value="${escHtml(r.id)}">#${i + 1} ${escHtml(r.label)}${crown} — ${scoreLabel}</option>`);
+  });
+  sel.innerHTML = options.join('');
+
+  // Preserve the current selection if that run still exists, else fall back to auto.
+  sel.value = runs.some(r => r.id === prev) || prev === 'auto' ? prev : 'auto';
+  selectedChallengerId = sel.value;
+}
 
 function renderArena(runs) {
+  populateIterSelect(runs);
+
   const teacherRun = runs.find(r => r.id === bestId) || null;
   const running = runs.filter(r => r.status === 'running').slice(-1)[0];
   const nonTeacherDone = [...runs].reverse().find(r => r.id !== bestId && r.status !== 'running');
-  const challengerRun = running || nonTeacherDone || null;
+  const autoChallenger = running || nonTeacherDone || null;
+  const challengerRun = selectedChallengerId !== 'auto'
+    ? (runs.find(r => r.id === selectedChallengerId) || null)
+    : autoChallenger;
+
+  document.getElementById('challenger-role').textContent =
+    selectedChallengerId !== 'auto' ? 'Challenger · iteration view' : 'Challenger · this run';
 
   const maxSc = Math.max(1, 0, ...runs.filter(r => r.metrics).map(r => score(r)));
 
