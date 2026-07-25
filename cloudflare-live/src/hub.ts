@@ -25,6 +25,12 @@ export class AgentHub extends DurableObject<Env> {
         updated_at  INTEGER NOT NULL
       )
     `);
+    // Migration: older DO instances were created before the `meta` column existed.
+    try {
+      this.ctx.storage.sql.exec(`ALTER TABLE runs ADD COLUMN meta TEXT`);
+    } catch {
+      /* column already exists — fine */
+    }
   }
 
   async fetch(request: Request): Promise<Response> {

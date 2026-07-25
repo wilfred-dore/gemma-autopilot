@@ -111,7 +111,8 @@ def main() -> None:
     req = urllib.request.Request(
         url, data=data,
         headers={"Content-Type": "application/json",
-                 "Authorization": f"Bearer {args.key}"},
+                 "Authorization": f"Bearer {args.key}",
+                 "User-Agent": "Mozilla/5.0 (gemma-autopilot push script)"},
         method="POST",
     )
 
