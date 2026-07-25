@@ -1,0 +1,47 @@
+name: Push to Live Dashboard
+
+on:
+  # Run automatically when new journal data appears
+  push:
+    branches: [main]
+    paths:
+      - "runs/journal.jsonl"
+      - "datasets/state.sample.json"
+
+  # Run manually from the Actions tab — choose what to seed
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Data source to push"
+        required: true
+        default: "sample"
+        type: choice
+        options:
+          - sample       # datasets/state.sample.json  (demo / hackathon results)
+          - journal      # runs/journal.jsonl           (real agent runs)
+          - both         # both files, journal wins on conflicts
+      reset_first:
+        description: "Clear all existing runs before pushing"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+jobs:
+  push-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Push runs to live dashboard
+        env:
+          LIVE_ENDPOINT: ${{ secrets.LIVE_ENDPOINT }}
+          LIVE_API_KEY:  ${{ secrets.LIVE_API_KEY }}
+          SOURCE:        ${{ github.event.inputs.source || 'journal' }}
+          RESET_FIRST:   ${{ github.event.inputs.reset_first || 'false' }}
+        run: python .github/scripts/push_to_live.py

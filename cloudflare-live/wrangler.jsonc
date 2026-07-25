@@ -1,0 +1,24 @@
+{
+  // "wrangler deploy" → live at https://gemma-autopilot-live.<your-subdomain>.workers.dev
+  "name": "gemma-autopilot-live",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-23",
+  "assets": {
+    "directory": "./public"
+    // Assets serve /index.html etc. Worker handles /api/* and /ws only.
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "AGENT_HUB",
+        "class_name": "AgentHub"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AgentHub"]
+    }
+  ]
+}

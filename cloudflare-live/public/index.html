@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gemma Autopilot · Live</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+:root {
+  --bg:      #0f0f0e;
+  --surf:    #1a1a19;
+  --card:    #232322;
+  --border:  #3a3936;
+  --ink:     #f0efe9;
+  --ink2:    #9a9890;
+  --blue:    #3987e5;
+  --green:   #22c55e;
+  --gold:    #f59e0b;
+  --red:     #ef4444;
+  --purple:  #a855f7;
+  --gray:    #6b7280;
+  --r:       10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}
+a{color:var(--blue)}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.page{max-width:1400px;margin:0 auto;padding:18px 20px 60px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+header h1{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;
+  padding:3px 10px;border-radius:99px;border:1px solid var(--border)}
+.badge.connected{color:var(--green);border-color:var(--green)}
+.badge.disconnected{color:var(--red);border-color:var(--red)}
+.badge.connecting{color:var(--gold);border-color:var(--gold)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+header .spacer{flex:1}
+.btn{cursor:pointer;background:var(--card);border:1px solid var(--border);color:var(--ink2);
+  font:13px system-ui;padding:5px 12px;border-radius:6px;transition:.15s}
+.btn:hover{background:var(--surf);color:var(--ink)}
+.btn.danger:hover{border-color:var(--red);color:var(--red)}
+
+/* ── Metric tiles ─────────────────────────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.tile .k{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:4px}
+.tile .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.tile .d{font-size:12px;color:var(--ink2);margin-top:2px}
+.tile .v.green{color:var(--green)} .tile .v.gold{color:var(--gold)} .tile .v.blue{color:var(--blue)}
+
+/* ── Main grid ────────────────────────────────────────────────────────── */
+.main-grid{display:grid;grid-template-columns:1fr 320px;gap:10px;margin-bottom:10px}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:700px){.bottom-grid{grid-template-columns:1fr}}
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.card-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+.card-body{padding:12px 14px}
+
+/* ── Tree ─────────────────────────────────────────────────────────────── */
+#tree-wrap{overflow:hidden;background:var(--card);border-radius:var(--r);border:1px solid var(--border)}
+#tree-svg{display:block;width:100%;min-height:280px;cursor:grab}
+#tree-svg:active{cursor:grabbing}
+#tree-empty{display:none;text-align:center;padding:60px 20px;color:var(--ink2);font-size:14px}
+
+.link{fill:none;stroke:var(--border);stroke-width:1.5;stroke-linecap:round}
+.link-running{stroke:var(--blue);stroke-dasharray:6 4;animation:dash 1s linear infinite;stroke-width:1.5}
+@keyframes dash{to{stroke-dashoffset:-20}}
+
+.node-circle{stroke-width:2.5;transition:filter .3s}
+.node-running .node-circle{animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 3px currentColor)}50%{filter:drop-shadow(0 0 10px currentColor)}}
+.node-label{fill:var(--ink2);font-size:11px;pointer-events:none;dominant-baseline:auto}
+.node-score{font-size:12px;font-weight:700;pointer-events:none;dominant-baseline:auto}
+.node-g{cursor:pointer}
+.node-g:hover .node-circle{filter:drop-shadow(0 0 8px currentColor)}
+
+/* Best crown */
+.crown{fill:var(--gold);font-size:13px;pointer-events:none}
+
+/* ── Tooltip ──────────────────────────────────────────────────────────── */
+#tooltip{position:fixed;pointer-events:none;display:none;z-index:99;
+  background:var(--surf);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;font-size:12px;line-height:1.5;max-width:260px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4)}
+#tooltip .tip-label{font-weight:700;margin-bottom:4px}
+#tooltip .tip-row{display:flex;justify-content:space-between;gap:16px;color:var(--ink2)}
+#tooltip .tip-row span:last-child{color:var(--ink);font-weight:600}
+
+/* ── Detail panel ─────────────────────────────────────────────────────── */
+#detail{position:fixed;top:0;right:-360px;width:340px;height:100vh;overflow-y:auto;
+  background:var(--surf);border-left:1px solid var(--border);z-index:50;
+  padding:18px;transition:right .3s ease;font-size:13px}
+#detail.open{right:0}
+#detail .close-btn{float:right;cursor:pointer;color:var(--ink2);font-size:18px;line-height:1}
+#detail .close-btn:hover{color:var(--ink)}
+#detail h2{font-size:15px;font-weight:700;margin-bottom:14px;padding-right:24px}
+#detail .dl dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-top:12px}
+#detail .dl dd{margin:3px 0 0;word-break:break-word}
+#detail .reasoning-box{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:10px 12px;margin-top:4px;line-height:1.55;color:var(--ink)}
+.status-pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
+.status-running{background:#1d3461;color:var(--blue)}
+.status-done{background:#14401f;color:var(--green)}
+.status-failed{background:#3b1111;color:var(--red)}
+
+/* ── Leaderboard ──────────────────────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--ink2);padding:7px 10px;border-bottom:1px solid var(--border)}
+th:not(:first-child){text-align:right}
+td{padding:8px 10px;border-bottom:1px solid var(--border)}
+td:not(:first-child){text-align:right}
+tr:last-child td{border-bottom:none}
+tr.lb-best td{color:var(--gold);font-weight:700}
+tr.lb-viol td:last-child{color:var(--red)}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;
+  background:var(--surf);border:1px solid var(--border)}
+.rank-badge.r1{background:var(--gold);color:#000;border-color:var(--gold)}
+.viol-chip{font-size:10px;padding:1px 5px;background:#3b1111;color:var(--red);border-radius:4px;margin-left:4px}
+
+/* ── Reasoning trace ──────────────────────────────────────────────────── */
+.trace{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-right:2px}
+.trace::-webkit-scrollbar{width:4px} .trace::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.t-item{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:7px;padding:8px 10px}
+.t-item.running{border-left-color:var(--gold);animation:borderPulse 1.5s ease-in-out infinite}
+@keyframes borderPulse{50%{border-left-color:var(--blue)}}
+.t-meta{font-size:11px;color:var(--ink2);display:flex;gap:8px;margin-bottom:4px}
+.t-label{font-weight:700;color:var(--ink)}
+.t-text{font-size:12px;color:var(--ink);line-height:1.5}
+
+/* ── Legend ───────────────────────────────────────────────────────────── */
+.legend{display:flex;flex-wrap:wrap;gap:12px;padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--ink2)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<header>
+  <h1>⚡ Gemma Autopilot</h1>
+  <span class="badge connecting" id="ws-status"><span class="dot"></span><span id="ws-label">Connecting…</span></span>
+  <span class="spacer"></span>
+  <button class="btn" id="demo-btn" title="Load sample data to preview the UI">Demo data</button>
+  <button class="btn danger" id="reset-btn" title="Delete all runs from the server">Clear all</button>
+</header>
+
+<!-- ── Tiles ──────────────────────────────────────────────────────────── -->
+<div class="tiles">
+  <div class="tile"><div class="k">Best throughput</div><div class="v green" id="t-best">—</div><div class="d" id="t-best-d">waiting for data…</div></div>
+  <div class="tile"><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
+  <div class="tile"><div class="k">Total runs</div><div class="v blue" id="t-iters">0</div><div class="d" id="t-active">0 active</div></div>
+  <div class="tile"><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
+</div>
+
+<!-- ── Tree + Detail side ─────────────────────────────────────────────── -->
+<div class="main-grid" style="margin-bottom:10px">
+  <div id="tree-wrap">
+    <div class="card-head">
+      🌳 Exploration tree
+      <span style="flex:1"></span>
+      <span style="font-size:11px;font-weight:400;color:var(--ink2)">scroll to zoom · drag to pan · click node for details</span>
+    </div>
+    <div id="tree-empty">No runs yet.<br>Push the first agent run to start the exploration tree.</div>
+    <svg id="tree-svg"></svg>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Running</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Done · TTFT ok</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Best score</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>TTFT violated</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Human expert</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div>Failed</div>
+    </div>
+  </div>
+
+  <!-- Reasoning trace sidebar -->
+  <div class="card" style="overflow:hidden">
+    <div class="card-head">💭 Agent reasoning</div>
+    <div class="card-body" style="padding:10px">
+      <div class="trace" id="trace"><p style="color:var(--ink2);font-size:13px">No reasoning yet.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Leaderboard ─────────────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:10px">
+  <div class="card-head">🏆 Leaderboard <span style="font-weight:400;margin-left:4px">(score = 0 if TTFT &gt; 500 ms)</span></div>
+  <div style="overflow-x:auto">
+    <table id="lb-table">
+      <thead><tr>
+        <th>#</th><th>Label</th><th>Tokens/s</th><th>TTFT ms</th><th>J/tok</th><th>Score</th>
+      </tr></thead>
+      <tbody id="lb-body"><tr><td colspan="6" style="color:var(--ink2);text-align:center;padding:20px">Waiting for runs…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<!-- ── Tooltip ──────────────────────────────────────────────────────────── -->
+<div id="tooltip"></div>
+
+<!-- ── Detail panel ─────────────────────────────────────────────────────── -->
+<div id="detail">
+  <span class="close-btn" id="detail-close">✕</span>
+  <h2 id="detail-title">Run details</h2>
+  <dl class="dl" id="detail-body"></dl>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════════════════
+let allRuns = [];
+let bestId = null;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WebSocket
+// ═══════════════════════════════════════════════════════════════════════════
+const wsStatus = document.getElementById('ws-status');
+const wsLabel  = document.getElementById('ws-label');
+
+function setWsState(state) {
+  wsStatus.className = 'badge ' + state;
+  wsLabel.textContent = state === 'connected' ? 'Live' : state === 'connecting' ? 'Connecting…' : 'Disconnected';
+}
+
+function connectWs() {
+  setWsState('connecting');
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+  ws.onopen  = () => setWsState('connected');
+  ws.onclose = () => { setWsState('disconnected'); setTimeout(connectWs, 3000); };
+  ws.onerror = () => ws.close();
+
+  ws.onmessage = (evt) => {
+    const msg = JSON.parse(evt.data);
+    if (msg.type === 'init' || msg.type === 'update') {
+      allRuns = msg.runs;
+      render();
+    }
+  };
+}
+connectWs();
+
+// Fallback poll if WS fails
+setInterval(async () => {
+  if (wsStatus.classList.contains('disconnected')) {
+    try {
+      const r = await fetch('/api/state');
+      if (r.ok) { allRuns = (await r.json()).runs; render(); }
+    } catch {}
+  }
+}, 5000);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Scoring helpers
+// ═══════════════════════════════════════════════════════════════════════════
+function score(run) {
+  if (!run.metrics) return -1;
+  return run.metrics.ttft_ms <= 500 ? run.metrics.tokens_per_s : 0;
+}
+
+function fmt(v, dec = 1) {
+  return v == null ? '—' : Number(v).toFixed(dec);
+}
+
+function nodeColor(run, isBest) {
+  if (run.status === 'running') return 'var(--blue)';
+  if (run.status === 'failed')  return 'var(--gray)';
+  if (run.label === 'human-expert') return 'var(--purple)';
+  const s = score(run);
+  if (s < 0) return 'var(--gray)';
+  if (s === 0) return 'var(--red)';
+  if (isBest)  return 'var(--gold)';
+  return 'var(--green)';
+}
+
+function nodeRadius(run, maxScore) {
+  if (!run.metrics) return 9;
+  const s = score(run);
+  if (s <= 0) return 9;
+  return 9 + Math.min(11, (s / Math.max(maxScore, 1)) * 11);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// D3 Tree
+// ═══════════════════════════════════════════════════════════════════════════
+const svgEl   = document.getElementById('tree-svg');
+const svgD3   = d3.select('#tree-svg');
+const treeEmptyEl = document.getElementById('tree-empty');
+
+// One group for zoom, one for tree content
+const zoomG  = svgD3.append('g').attr('class', 'zoom-g');
+const linksG = zoomG.append('g').attr('class', 'links-g');
+const nodesG = zoomG.append('g').attr('class', 'nodes-g');
+
+const zoomBehavior = d3.zoom()
+  .scaleExtent([0.12, 5])
+  .on('zoom', e => zoomG.attr('transform', e.transform));
+svgD3.call(zoomBehavior);
+
+let zoomCentered = false;
+
+function buildHierarchy(runs) {
+  if (!runs.length) return null;
+  const data = [
+    { id: '__ROOT__', parent_id: null, label: '', status: 'root', _virtual: true },
+    ...runs.map(r => ({ ...r, parent_id: r.parent_id || '__ROOT__' }))
+  ];
+  try {
+    return d3.stratify().id(d => d.id).parentId(d => d.parent_id)(data);
+  } catch (e) {
+    console.warn('D3 stratify error:', e);
+    return null;
+  }
+}
+
+function renderTree(runs) {
+  if (!runs.length) {
+    treeEmptyEl.style.display = 'block';
+    svgEl.style.display = 'none';
+    return;
+  }
+  treeEmptyEl.style.display = 'none';
+  svgEl.style.display = 'block';
+
+  const root = buildHierarchy(runs);
+  if (!root) return;
+
+  const layout = d3.tree().nodeSize([78, 240]);
+  layout(root);
+
+  const realNodes = root.descendants().filter(d => !d.data._virtual);
+  const realLinks = root.links().filter(l => !l.source.data._virtual);
+
+  const xs = realNodes.map(d => d.x);
+  const ys = realNodes.map(d => d.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+  const svgW = svgEl.clientWidth || 700;
+  const svgH = Math.max(300, maxX - minX + 160);
+  svgEl.setAttribute('height', svgH);
+
+  // Center tree on first render
+  if (!zoomCentered && realNodes.length > 0) {
+    const t = d3.zoomIdentity
+      .translate(80 - minY, svgH / 2 - (minX + maxX) / 2);
+    svgD3.call(zoomBehavior.transform, t);
+    zoomCentered = true;
+  }
+
+  const validIds = new Set(runs.map(r => r.id));
+  const maxSc = Math.max(0, ...runs.filter(r => r.metrics).map(r => score(r)));
+  const bi = runs.filter(r => score(r) > 0).sort((a,b) => score(b)-score(a))[0]?.id ?? null;
+  bestId = bi;
+
+  // ── Links ────────────────────────────────────────────────────────────
+  const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
+
+  const linkSel = linksG.selectAll('path.link')
+    .data(realLinks, d => `${d.source.id}→${d.target.id}`);
+
+  linkSel.enter().append('path')
+    .attr('class', d => d.target.data.status === 'running' ? 'link link-running' : 'link')
+    .attr('d', d => {
+      const o = { x: d.source.x, y: d.source.y };
+      return diagonal({ source: o, target: o });
+    })
+    .merge(linkSel)
+    .attr('class', d => d.target.data.status === 'running' ? 'link link-running' : 'link')
+    .transition().duration(650)
+    .attr('d', diagonal);
+
+  linkSel.exit().remove();
+
+  // ── Nodes ────────────────────────────────────────────────────────────
+  const nodeSel = nodesG.selectAll('g.node-g')
+    .data(realNodes, d => d.id);
+
+  const entering = nodeSel.enter().append('g')
+    .attr('class', d => `node-g node-${d.data.status}`)
+    .attr('transform', d => {
+      const src = d.parent?.data._virtual ? d : d.parent ?? d;
+      return `translate(${src.y ?? d.y},${src.x ?? d.x})`;
+    })
+    .on('click', (e, d) => { e.stopPropagation(); showDetail(d.data); })
+    .on('mouseover', (e, d) => showTooltip(e, d.data, maxSc, bi))
+    .on('mouseout',  hideTip);
+
+  entering.append('circle').attr('class', 'node-circle').attr('r', 0);
+  entering.append('text').attr('class', 'node-label');
+  entering.append('text').attr('class', 'node-score');
+  entering.append('text').attr('class', 'crown').attr('text-anchor','middle');
+
+  const all = nodeSel.merge(entering);
+
+  all.attr('class', d => `node-g node-${d.data.status}`)
+    .transition().duration(650)
+    .attr('transform', d => `translate(${d.y},${d.x})`);
+
+  all.select('circle.node-circle')
+    .transition().duration(650)
+    .attr('r', d => nodeRadius(d.data, maxSc))
+    .attr('fill', d => nodeColor(d.data, d.data.id === bi))
+    .attr('stroke', d => nodeColor(d.data, d.data.id === bi))
+    .attr('fill-opacity', d => d.data.status === 'running' ? 0.3 : 0.85)
+    .attr('stroke-opacity', 1);
+
+  all.select('text.node-label')
+    .attr('text-anchor', 'middle')
+    .attr('y', d => -nodeRadius(d.data, maxSc) - 7)
+    .attr('class', 'node-label')
+    .text(d => d.data.label.length > 18 ? d.data.label.slice(0,16)+'…' : d.data.label);
+
+  all.select('text.node-score')
+    .attr('text-anchor', 'middle')
+    .attr('y', d => nodeRadius(d.data, maxSc) + 17)
+    .attr('fill', d => nodeColor(d.data, d.data.id === bi))
+    .attr('class', 'node-score')
+    .text(d => {
+      if (d.data.status === 'running') return '⏳';
+      if (!d.data.metrics) return '';
+      const s = score(d.data);
+      return s === 0 ? '✗ TTFT' : `${fmt(d.data.metrics.tokens_per_s, 0)} t/s`;
+    });
+
+  all.select('text.crown')
+    .attr('y', d => -nodeRadius(d.data, maxSc) - 20)
+    .text(d => d.data.id === bi ? '★' : '');
+
+  nodeSel.exit().transition().duration(300).style('opacity', 0).remove();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tooltip
+// ═══════════════════════════════════════════════════════════════════════════
+const tip = document.getElementById('tooltip');
+
+function showTooltip(event, run, maxSc, bi) {
+  const color = nodeColor(run, run.id === bi);
+  const s = score(run);
+  tip.innerHTML = `
+    <div class="tip-label" style="color:${color}">${run.label}</div>
+    <div class="tip-row"><span>Status</span><span>${run.status}</span></div>
+    ${run.metrics ? `
+    <div class="tip-row"><span>Tokens/s</span><span>${fmt(run.metrics.tokens_per_s)}</span></div>
+    <div class="tip-row"><span>TTFT</span><span style="color:${run.metrics.ttft_ms>500?'var(--red)':'inherit'}">${fmt(run.metrics.ttft_ms,0)} ms</span></div>
+    ${run.metrics.itl_ms ? `<div class="tip-row"><span>ITL</span><span>${fmt(run.metrics.itl_ms,1)} ms</span></div>` : ''}
+    ` : ''}
+    ${run.energy?.joules_per_token ? `<div class="tip-row"><span>J/token</span><span>${fmt(run.energy.joules_per_token,4)}</span></div>` : ''}
+    <div class="tip-row"><span>Score</span><span>${s < 0 ? '—' : fmt(s)}</span></div>
+  `;
+  tip.style.display = 'block';
+  moveTip(event);
+}
+
+function moveTip(event) {
+  const x = event.clientX + 14, y = event.clientY - 10;
+  tip.style.left = Math.min(x, window.innerWidth - 280) + 'px';
+  tip.style.top  = Math.min(y, window.innerHeight - 200) + 'px';
+}
+function hideTip() { tip.style.display = 'none'; }
+document.addEventListener('mousemove', e => { if (tip.style.display !== 'none') moveTip(e); });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Detail panel
+// ═══════════════════════════════════════════════════════════════════════════
+const detailPanel = document.getElementById('detail');
+document.getElementById('detail-close').onclick = () => detailPanel.classList.remove('open');
+svgD3.on('click', () => detailPanel.classList.remove('open'));
+
+function showDetail(run) {
+  hideTip();
+  document.getElementById('detail-title').textContent = run.label;
+  const s = score(run);
+  const isBest = run.id === bestId;
+  const color = nodeColor(run, isBest);
+
+  function row(label, val) {
+    if (val == null || val === undefined) return '';
+    return `<dt>${label}</dt><dd>${val}</dd>`;
+  }
+
+  let html = `
+    <dt>Status</dt>
+    <dd><span class="status-pill status-${run.status}">${run.status}</span>${isBest ? ' <span style="color:var(--gold)">★ Best</span>' : ''}</dd>
+    ${row('Timestamp', run.ts ? new Date(run.ts).toLocaleString() : null)}
+    ${row('Parent run', run.parent_id)}
+  `;
+
+  if (run.metrics) {
+    html += `
+      <dt>Metrics</dt>
+      <dd>
+        <b>${fmt(run.metrics.tokens_per_s)} tok/s</b> ·
+        TTFT <span style="color:${run.metrics.ttft_ms>500?'var(--red)':'var(--green)'}">${fmt(run.metrics.ttft_ms,0)} ms</span>
+        ${run.metrics.itl_ms ? `· ITL ${fmt(run.metrics.itl_ms,1)} ms` : ''}
+      </dd>
+      <dt>Score</dt><dd style="color:${color};font-weight:700">${s < 0 ? '—' : fmt(s)}</dd>
+    `;
+  }
+
+  if (run.energy) {
+    html += `
+      <dt>Energy</dt>
+      <dd>${run.energy.joules != null ? fmt(run.energy.joules,1)+' J total' : ''}
+          ${run.energy.joules_per_token != null ? ' · <b>'+fmt(run.energy.joules_per_token,4)+' J/tok</b>' : ''}
+          ${run.energy.mean_power_w != null ? ' · '+fmt(run.energy.mean_power_w,0)+' W avg' : ''}
+      </dd>
+    `;
+  }
+
+  if (run.config) {
+    const c = run.config;
+    html += `
+      <dt>Configuration</dt>
+      <dd>
+        ${c.max_num_seqs != null ? `max_seqs=${c.max_num_seqs}` : ''}
+        ${c.enable_prefix_caching != null ? ` · prefix_cache=${c.enable_prefix_caching}` : ''}
+        ${c.concurrency != null ? ` · concurrency=${c.concurrency}` : ''}
+        ${c.power_cap_w != null ? ` · power=${c.power_cap_w}W` : ''}
+        ${c.model ? `<br>${c.model}` : ''}
+        ${c.precision ? ` [${c.precision}]` : ''}
+      </dd>
+    `;
+  }
+
+  if (run.reasoning) {
+    html += `<dt>Agent reasoning</dt><dd><div class="reasoning-box">${escHtml(run.reasoning)}</div></dd>`;
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
+  detailPanel.classList.add('open');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Leaderboard
+// ═══════════════════════════════════════════════════════════════════════════
+function renderLeaderboard(runs) {
+  const scored = runs.filter(r => r.status !== 'running').map(r => ({
+    ...r, _score: score(r)
+  })).sort((a,b) => b._score - a._score);
+
+  const tbody = document.getElementById('lb-body');
+  if (!scored.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--ink2);text-align:center;padding:20px">No completed runs yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = scored.map((r, i) => {
+    const isBest = r.id === bestId;
+    const viol = r._score === 0 && r.metrics;
+    return `
+      <tr class="${isBest ? 'lb-best' : ''}">
+        <td><span class="rank-badge ${i===0?'r1':''}">${i+1}</span></td>
+        <td>${escHtml(r.label)}${viol ? '<span class="viol-chip">TTFT</span>' : ''}</td>
+        <td>${r.metrics ? fmt(r.metrics.tokens_per_s) : '—'}</td>
+        <td style="color:${r.metrics?.ttft_ms>500?'var(--red)':'inherit'}">${r.metrics ? fmt(r.metrics.ttft_ms,0) : '—'}</td>
+        <td>${r.energy?.joules_per_token != null ? fmt(r.energy.joules_per_token,4) : '—'}</td>
+        <td style="color:${isBest?'var(--gold)':viol?'var(--red)':'inherit'};font-weight:700">${r._score >= 0 ? fmt(r._score) : '—'}</td>
+      </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Reasoning trace
+// ═══════════════════════════════════════════════════════════════════════════
+function renderTrace(runs) {
+  const withReasoning = [...runs].reverse().filter(r => r.reasoning);
+  const el = document.getElementById('trace');
+  if (!withReasoning.length) {
+    el.innerHTML = '<p style="color:var(--ink2);font-size:13px">No reasoning yet.</p>';
+    return;
+  }
+  el.innerHTML = withReasoning.map(r => `
+    <div class="t-item ${r.status === 'running' ? 'running' : ''}">
+      <div class="t-meta">
+        <span class="t-label">${escHtml(r.label)}</span>
+        <span>${r.ts ? new Date(r.ts).toLocaleTimeString() : ''}</span>
+        ${r.status === 'running' ? '<span style="color:var(--gold)">● running</span>' : ''}
+      </div>
+      <div class="t-text">${escHtml(r.reasoning.slice(0, 300))}${r.reasoning.length > 300 ? '…' : ''}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Tiles
+// ═══════════════════════════════════════════════════════════════════════════
+function renderTiles(runs) {
+  const done = runs.filter(r => r.status === 'done' && r.metrics);
+  const active = runs.filter(r => r.status === 'running').length;
+  const best = done.filter(r => score(r) > 0).sort((a,b) => score(b)-score(a))[0];
+  const bestJ = done.reduce((m, r) => r.energy?.joules_per_token < m ? r.energy.joules_per_token : m, Infinity);
+  const allTtfts = done.filter(r => r.metrics).map(r => r.metrics.ttft_ms);
+  const okCount = allTtfts.filter(t => t <= 500).length;
+
+  document.getElementById('t-best').textContent = best ? fmt(best.metrics.tokens_per_s) + ' t/s' : '—';
+  document.getElementById('t-best-d').textContent = best ? `vs ${runs.filter(r=>r.label==='human-expert'&&r.metrics).map(r=>'human '+fmt(r.metrics.tokens_per_s)).join('')||'no baseline'}` : 'waiting for data…';
+  document.getElementById('t-energy').textContent = isFinite(bestJ) ? fmt(bestJ, 4) + ' J' : '—';
+  document.getElementById('t-iters').textContent = runs.length;
+  document.getElementById('t-active').textContent = `${active} active`;
+  document.getElementById('t-ttft').textContent = done.length ? `${okCount}/${done.length} pass` : '—';
+  document.getElementById('t-ttft').style.color = done.length && okCount < done.length ? 'var(--gold)' : 'var(--green)';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Main render
+// ═══════════════════════════════════════════════════════════════════════════
+function render() {
+  renderTiles(allRuns);
+  renderTree(allRuns);
+  renderLeaderboard(allRuns);
+  renderTrace(allRuns);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Reset button
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('reset-btn').onclick = async () => {
+  const key = prompt('Enter your API key to clear all data:');
+  if (!key) return;
+  const r = await fetch('/api/reset', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}` }
+  });
+  if (!r.ok) alert('Reset failed — wrong key?');
+  else { allRuns = []; zoomCentered = false; render(); }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Demo data
+// ═══════════════════════════════════════════════════════════════════════════
+document.getElementById('demo-btn').onclick = () => {
+  const now = () => new Date().toISOString();
+  const demoRuns = [
+    { id:'h1', parent_id:null, label:'human-expert', status:'done', ts:now(),
+      config:{max_num_seqs:64, enable_prefix_caching:false, concurrency:4},
+      metrics:{tokens_per_s:112.4, ttft_ms:298, itl_ms:8.1},
+      energy:{joules:1240, joules_per_token:0.0061, mean_power_w:310},
+      reasoning:'Human baseline: conservative config, prefix caching disabled.' },
+    { id:'a1', parent_id:null, label:'agent-iter-1', status:'done', ts:now(),
+      config:{max_num_seqs:256, enable_prefix_caching:true, concurrency:16},
+      metrics:{tokens_per_s:143.2, ttft_ms:412, itl_ms:12.3},
+      energy:{joules:1100, joules_per_token:0.0042, mean_power_w:298},
+      reasoning:'Starting aggressive: large batch + prefix caching. TTFT still within constraint. Throughput up 27%.' },
+    { id:'a2', parent_id:'a1', label:'agent-iter-2', status:'done', ts:now(),
+      config:{max_num_seqs:512, enable_prefix_caching:true, concurrency:32},
+      metrics:{tokens_per_s:158.9, ttft_ms:621, itl_ms:18.7},
+      energy:{joules:1380, joules_per_token:0.0048, mean_power_w:320},
+      reasoning:'Pushed max_num_seqs to 512 — TTFT violated (621 ms > 500 ms). Backing off batch size.' },
+    { id:'a3', parent_id:'a1', label:'agent-iter-3', status:'done', ts:now(),
+      config:{max_num_seqs:128, enable_prefix_caching:true, concurrency:16, power_cap_w:280},
+      metrics:{tokens_per_s:149.7, ttft_ms:380, itl_ms:10.4},
+      energy:{joules:920, joules_per_token:0.0034, mean_power_w:278},
+      reasoning:'Reduce batch, cap power at 280W. TTFT recovers. Energy improves significantly — memory-bound not power-bound.' },
+    { id:'a4', parent_id:'a3', label:'agent-iter-4', status:'done', ts:now(),
+      config:{max_num_seqs:192, enable_prefix_caching:true, concurrency:20, power_cap_w:280},
+      metrics:{tokens_per_s:161.3, ttft_ms:445, itl_ms:11.8},
+      energy:{joules:975, joules_per_token:0.0033, mean_power_w:279},
+      reasoning:'Increase batch to 192 with power cap — best score so far. Gains flattening, ~1 more iteration.' },
+    { id:'a5', parent_id:'a4', label:'agent-iter-5', status:'running', ts:now(),
+      reasoning:'Trying concurrency=24 to probe queue saturation limit before calling report_done.' },
+  ];
+  allRuns = demoRuns;
+  zoomCentered = false;
+  render();
+};
+</script>
+</body>
+</html>

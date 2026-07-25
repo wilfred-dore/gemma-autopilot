@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemma Autopilot — Rapport de projet</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --surface: #ffffff; --ink: #0f0e0d; --ink2: #5c5a55;
+    --border: #e3e2dc; --accent: #2a78d6; --accent2: #0ca30c; --warn: #b3401f;
+    --code-bg: #f0efe9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, sans-serif; padding: 0; }
+
+  .page { max-width: 860px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Header */
+  .header { margin-bottom: 48px; border-bottom: 2px solid var(--border); padding-bottom: 28px; }
+  .header .label { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  h1 { font-size: 36px; font-weight: 800; line-height: 1.15; margin-bottom: 10px; }
+  .header .tagline { font-size: 18px; color: var(--ink2); margin-bottom: 18px; }
+  .meta { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--ink2); }
+  .meta span::before { content: '•'; margin-right: 6px; color: var(--border); }
+  .meta span:first-child::before { display: none; }
+
+  /* Sections */
+  section { margin-bottom: 44px; }
+  h2 { font-size: 22px; font-weight: 700; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 16px; font-weight: 700; margin: 20px 0 8px; color: var(--ink); }
+  p { margin-bottom: 12px; color: var(--ink); }
+  ul { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+
+  /* Callout */
+  .callout { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; }
+  .callout.green { border-left-color: var(--accent2); }
+  .callout.red { border-left-color: var(--warn); }
+  .callout strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }
+  .callout.green strong { color: var(--accent2); }
+  .callout.red strong { color: var(--warn); }
+
+  /* Architecture diagram */
+  .arch { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 24px; margin-bottom: 20px; }
+  .arch-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+  .arch-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 600; text-align: center; min-width: 120px; }
+  .arch-box.accent { background: #ebf3fc; border-color: var(--accent); color: var(--accent); }
+  .arch-box.green { background: #eaf7ea; border-color: var(--accent2); color: #0a7a0a; }
+  .arch-arrow { padding: 0 6px; color: var(--ink2); font-size: 18px; }
+  .arch-row { display: flex; align-items: flex-start; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+  .arch-col { flex: 1 1 160px; }
+  .arch-col-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink2); margin-bottom: 8px; }
+  .arch-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; margin-bottom: 6px; }
+
+  /* Metrics table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink2); padding: 8px 12px; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+
+  /* Code */
+  code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 13px; font-family: ui-monospace, Menlo, monospace; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 13px; font-family: ui-monospace, Menlo, monospace; line-height: 1.5; margin-bottom: 16px; }
+
+  /* File tree */
+  .tree { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.8; }
+  .tree .dir { color: var(--accent); font-weight: 700; }
+  .tree .comment { color: var(--ink2); }
+
+  /* Badge pills */
+  .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 99px; margin: 2px; }
+  .pill.blue { background: #ebf3fc; color: var(--accent); }
+  .pill.green { background: #eaf7ea; color: #0a7a0a; }
+  .pill.gray { background: var(--code-bg); color: var(--ink2); border: 1px solid var(--border); }
+
+  /* Loop steps */
+  .steps { counter-reset: step; display: flex; flex-direction: column; gap: 14px; }
+  .step { counter-increment: step; display: flex; gap: 14px; align-items: flex-start; }
+  .step-num { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .step-num::before { content: counter(step); }
+  .step-body { padding-top: 4px; }
+  .step-body strong { display: block; }
+
+  /* Guard rail */
+  .guardrail { display: flex; align-items: baseline; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 14px; }
+  .guardrail .icon { font-size: 16px; flex-shrink: 0; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 26px; }
+    .page { padding: 28px 16px 60px; }
+    .arch-flow { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="label">Rapport de projet</div>
+    <h1>Gemma Autopilot</h1>
+    <p class="tagline">Un agent autonome qui optimise et explique son propre déploiement d'inférence LLM.</p>
+    <div class="meta">
+      <span>Hackathon Paris Gemma 4 · 42 Paris</span>
+      <span>Langage : Python ≥ 3.10</span>
+      <span>Licence : Apache-2.0</span>
+      <span>Modèle cible : Gemma 4 27B-A4B-it</span>
+    </div>
+  </div>
+
+  <!-- ── 1. RÉSUMÉ EXÉCUTIF ── -->
+  <section>
+    <h2>1. Résumé exécutif</h2>
+    <div class="callout">
+      <strong>En une phrase</strong>
+      Gemma Autopilot est un agent IA construit sur Gemma 4 qui se benchmark lui-même en boucle fermée, diagnostique les goulots d'étranglement en langage naturel, modifie sa propre configuration de déploiement (vLLM), puis se rebenchmarke — jusqu'à ce que les gains deviennent négligeables.
+    </div>
+    <p>Le projet répond à une question concrète : <em>peut-on confier à un LLM la responsabilité d'optimiser le serveur qui le fait tourner ?</em> La réponse démontrée ici est oui, avec deux contraintes fortes :</p>
+    <ul>
+      <li><strong>Contrainte de latence</strong> — TTFT (Time To First Token) ≤ 500 ms. Toute configuration qui la viole est éliminée du classement.</li>
+      <li><strong>Axe d'efficacité énergétique</strong> — joules/token tracés à chaque run, car l'énergie compte autant que la vitesse.</li>
+    </ul>
+    <p>Chaque configuration produite par l'agent est mesurée sur un vrai GPU (H100 PCIe) et publiée en temps réel dans un dashboard HTML. Un baseline <em>human expert</em> sert de référence compétitive.</p>
+  </section>
+
+  <!-- ── 2. CONTEXTE & MOTIVATION ── -->
+  <section>
+    <h2>2. Contexte et motivation</h2>
+    <h3>Pourquoi l'auto-optimisation ?</h3>
+    <p>Déployer un LLM en production implique de nombreux hyperparamètres interdépendants : taille des batchs (<code>max_num_seqs</code>), prefix caching, power cap GPU, concurrence client… L'espace de recherche est trop large pour une exploration manuelle, et les interactions entre paramètres sont non-linéaires. Un agent capable de raisonner sur des métriques réelles et d'itérer plus vite qu'un humain est donc une piste naturelle.</p>
+    <h3>Pourquoi Gemma 4 ?</h3>
+    <p>Gemma 4 supporte nativement le <em>function calling</em> via le parser <code>--tool-call-parser gemma4</code> de vLLM. L'agent utilise cela directement : chaque action (lancer un benchmark, ajuster le power cap, faire une recherche) est exprimée comme un appel d'outil structuré, sans couche d'abstraction supplémentaire.</p>
+    <h3>Charge de travail cible</h3>
+    <p>Le benchmark simule la génération de <strong>documents confidentiels</strong> (brevets pre-dépôt, rapports médicaux, articles d'investigation anonymisés) — une classe de workloads qui justifie l'inférence locale : contexte d'entrée long (300–800 tokens), sortie structurée longue, fort stress sur le KV cache et le batching.</p>
+  </section>
+
+  <!-- ── 3. ARCHITECTURE ── -->
+  <section>
+    <h2>3. Architecture</h2>
+
+    <div class="arch">
+      <div class="arch-flow">
+        <div class="arch-box accent">Gemma 4<br><small>(cerveau de l'agent)</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">Tool call<br><small>function calling</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">Dispatch<br><small>guardrails</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box green">vLLM server<br><small>+ GPU (H100)</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">Métriques<br><small>JSON</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box accent">Gemma 4</div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-col">
+          <div class="arch-col-title">Outils disponibles</div>
+          <div class="arch-item">🔬 <strong>run_benchmark</strong> — lance vllm bench serve</div>
+          <div class="arch-item">⚡ <strong>set_power_cap</strong> — nvidia-smi -pl</div>
+          <div class="arch-item">🌐 <strong>search_web</strong> — SerpAPI (tuning guides)</div>
+          <div class="arch-item">📄 <strong>search_papers</strong> — OpenAIRE</div>
+          <div class="arch-item">✅ <strong>report_done</strong> — arrête la boucle</div>
+        </div>
+        <div class="arch-col">
+          <div class="arch-col-title">Observabilité</div>
+          <div class="arch-item">📓 Journal JSONL (runs + raisonnements)</div>
+          <div class="arch-item">📊 state.json (dashboard live)</div>
+          <div class="arch-item">🏆 Leaderboard temps réel</div>
+          <div class="arch-item">🔋 Energy meter (NVML)</div>
+        </div>
+        <div class="arch-col">
+          <div class="arch-col-title">Sécurité / guardrails</div>
+          <div class="arch-item">max_num_seqs : 1–512</div>
+          <div class="arch-item">concurrency : 1–64</div>
+          <div class="arch-item">power_cap_w : 200–350 W</div>
+          <div class="arch-item">Liste blanche d'outils</div>
+        </div>
+      </div>
+    </div>
+
+    <h3>La boucle d'optimisation</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body"><strong>Diagnostic en langage naturel</strong> L'agent reçoit les métriques du run précédent (tokens/s, TTFT, ITL, joules/token) et explique en 2–3 phrases son interprétation : memory-bound ? latency-bound ? queue saturation ? energy tradeoff ?</div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body"><strong>Choix d'action (un seul outil à la fois)</strong> L'agent appelle un outil : modifier la concurrence, activer/désactiver le prefix caching, ajuster le power cap, ou faire une recherche externe si le résultat est surprenant.</div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body"><strong>Exécution et mesure</strong> <code>bench_runner.py</code> lance <code>vllm bench serve</code>, parse sa sortie (tokens/s, TTFT, ITL), mesure l'énergie en temps réel via NVML (delta du compteur cumulatif, précision Volta+), et retourne un RunResult JSON complet.</div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body"><strong>Journal & leaderboard</strong> Chaque run est ajouté au journal JSONL et au state.json. Le leaderboard attribue un score = tokens/s si TTFT ≤ 500 ms, sinon 0. Le dashboard se rafraîchit automatiquement.</div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body"><strong>Arrêt adaptatif</strong> Quand les gains estimés descendent sous ~3 %, l'agent appelle <code>report_done</code> avec un résumé en langage naturel de la stratégie et des résultats.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4. STRUCTURE DU CODE ── -->
+  <section>
+    <h2>4. Structure du code</h2>
+    <div class="tree">
+<span class="dir">autopilot/</span><br>
+&nbsp;&nbsp;agent.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># boucle principale, system prompt, fallback JSON</span><br>
+&nbsp;&nbsp;tools.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># schémas des outils, dispatch, guardrails, Ctx</span><br>
+&nbsp;&nbsp;bench_runner.py&nbsp;<span class="comment"># wraps vllm bench serve, parse output, EnergyMeter</span><br>
+&nbsp;&nbsp;power.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># NvmlBackend, EnergyMeter, set_power_cap()</span><br>
+&nbsp;&nbsp;journal.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Journal class, leaderboard(), _write_state()</span><br>
+&nbsp;&nbsp;dataset.py&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># chargement des prompts JSONL<br>
+<span class="dir">datasets/</span><br>
+&nbsp;&nbsp;confidential_drafting.jsonl&nbsp;<span class="comment"># 30 prompts reproductibles</span><br>
+&nbsp;&nbsp;generate.py&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># générateur de la suite (brevets, médical, presse)</span><br>
+<span class="dir">tests/</span><br>
+&nbsp;&nbsp;test_tools.py&nbsp;&nbsp;<span class="comment"># guardrails, dispatch, power cap</span><br>
+&nbsp;&nbsp;test_bench_runner.py, test_dataset.py, test_journal.py, test_power.py<br>
+dashboard.html&nbsp;&nbsp;&nbsp;<span class="comment"># dashboard live (polling state.json)</span><br>
+pyproject.toml&nbsp;&nbsp;&nbsp;<span class="comment"># dépendances : pynvml, codecarbon, requests</span>
+    </div>
+  </section>
+
+  <!-- ── 5. COMPOSANTS CLÉS ── -->
+  <section>
+    <h2>5. Composants clés</h2>
+
+    <h3>Agent (<code>agent.py</code>)</h3>
+    <p>Le système repose sur un <strong>system prompt fortement contraignant</strong> qui impose à Gemma 4 :</p>
+    <ul>
+      <li>Un seul appel d'outil par tour (évite les séquences ingérables)</li>
+      <li>Un raisonnement explicite <em>avant</em> chaque action (traçabilité)</li>
+      <li>De commencer par l'extrémité agressive de la plage de config, puis d'adapter</li>
+      <li>D'appeler <code>search_web</code> ou <code>search_papers</code> face à un résultat surprenant</li>
+    </ul>
+    <p>Un <strong>fallback JSON</strong> est intégré : si vLLM ne retourne pas de <code>tool_calls</code> parsés (edge case), l'agent relance avec une demande de JSON brut. Même chemin de dispatch — la démo ne peut pas mourir sur un bug de parseur.</p>
+
+    <h3>Guardrails (<code>tools.py</code>)</h3>
+    <p>Tous les arguments sont vérifiés à l'entrée. Un rejet retourne un JSON explicatif que le modèle peut lire et corriger :</p>
+    <div class="guardrail"><span class="icon">🔒</span><div><code>max_num_seqs</code> : 1–512 · <code>concurrency</code> : 1–64 · <code>power_cap_w</code> : 200–350 W (plage H100 PCIe vérifiée sur le matériel)</div></div>
+    <div class="guardrail"><span class="icon">🔒</span><div>Liste blanche d'outils : toute tentative d'appeler un outil inexistant retourne <code>{"error": "unknown tool"}</code></div></div>
+    <p>La classe <code>Ctx</code> (contexte d'exécution) est entièrement <strong>injectable</strong> via <code>Ctx.for_tests()</code> : les tests unitaires n'ont pas besoin de GPU ni de serveur vLLM.</p>
+
+    <h3>Mesure d'énergie (<code>power.py</code>)</h3>
+    <p><code>EnergyMeter</code> utilise <code>nvmlDeviceGetTotalEnergyConsumption</code> — le compteur cumulatif en millijoules disponible sur Volta+. Un delta d'entrée/sortie de contexte (<code>with EnergyMeter() as m:</code>) est plus précis qu'un sondage périodique. Résultat : joules totaux + watts moyens pour le run.</p>
+
+    <h3>Dataset (<code>datasets/</code>)</h3>
+    <p>30 prompts générés synthétiquement, répartis en trois classes de documents confidentiels :</p>
+    <ul>
+      <li><strong>Brevets pre-dépôt</strong> — 2 scénarios de base × 5 variations de paramètres</li>
+      <li><strong>Rapports médicaux sous privilège</strong> — idem</li>
+      <li><strong>Articles d'investigation anonymisés</strong> — idem</li>
+    </ul>
+    <p>300–800 tokens d'entrée, longue sortie structurée attendue. Ce profil stress le KV cache et le batching bien mieux que des tokens aléatoires — exactement ce que l'agent doit apprendre à optimiser.</p>
+
+    <h3>Dashboard (<code>dashboard.html</code>)</h3>
+    <p>Page HTML standalone qui poll <code>runs/state.json</code> à intervalle régulier. Affiche :</p>
+    <ul>
+      <li>Tuiles de résumé (meilleur throughput, meilleure énergie, nombre d'itérations, leader)</li>
+      <li>Graphes SVG : tokens/s et joules/token par run (points violacés = violation TTFT)</li>
+      <li>Leaderboard trié par score (0 si contrainte TTFT violée)</li>
+      <li>Trace de raisonnement de l'agent (chaque décision annotée)</li>
+    </ul>
+    <p>Mode replay disponible via <code>?replay</code> dans l'URL pour rejouer une session passée.</p>
+  </section>
+
+  <!-- ── 6. MÉTRIQUES ── -->
+  <section>
+    <h2>6. Métriques et objectif d'optimisation</h2>
+    <table>
+      <thead>
+        <tr><th>Métrique</th><th>Définition</th><th>Rôle</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>tokens/s</td><td>Débit de tokens de sortie générés</td><td>Objectif principal à maximiser</td></tr>
+        <tr><td>TTFT (ms)</td><td>Time To First Token — latence avant le premier token</td><td>Contrainte dure : ≤ 500 ms</td></tr>
+        <tr><td>ITL (ms)</td><td>Inter-Token Latency — délai entre tokens successifs</td><td>Signal de congestion mémoire</td></tr>
+        <tr><td>joules/token</td><td>Énergie totale / tokens générés</td><td>Axe d'efficacité secondaire</td></tr>
+        <tr><td>score</td><td><code>tokens_per_s</code> si TTFT ≤ 500 ms, sinon 0</td><td>Classement leaderboard</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 7. PARAMÈTRES D'OPTIMISATION ── -->
+  <section>
+    <h2>7. Paramètres explorés par l'agent</h2>
+    <table>
+      <thead>
+        <tr><th>Paramètre</th><th>Plage autorisée</th><th>Effet sur le système</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>max_num_seqs</code></td><td>1–512</td><td>Pression batch sur vLLM — plus élevé = meilleur débit, mais TTFT peut exploser</td></tr>
+        <tr><td><code>enable_prefix_caching</code></td><td>true / false</td><td>Réutilise les KV-cache communs entre requêtes — gain majeur sur prompts longs répétitifs</td></tr>
+        <tr><td><code>concurrency</code></td><td>1–64</td><td>Requêtes client simultanées — pilote la pression de queue</td></tr>
+        <tr><td><code>power_cap_w</code></td><td>200–350 W</td><td>Limite TDP GPU — réduit l'énergie au coût d'un léger ralentissement</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── 8. QUICKSTART ── -->
+  <section>
+    <h2>8. Démarrage rapide</h2>
+    <h3>Prérequis</h3>
+    <p>
+      <span class="pill blue">Python ≥ 3.10</span>
+      <span class="pill blue">vLLM</span>
+      <span class="pill blue">NVIDIA GPU (Volta+)</span>
+      <span class="pill gray">SERPAPI_API_KEY (optionnel)</span>
+    </p>
+    <h3>Installation</h3>
+    <pre>pip install -e .
+# ou
+pip install pynvml codecarbon requests</pre>
+    <h3>Lancement du serveur vLLM</h3>
+    <pre>vllm serve google/gemma-4-27b-it \
+  --tool-call-parser gemma4 \
+  --port 8000</pre>
+    <h3>Lancement de l'agent</h3>
+    <pre>python -m autopilot.agent --iters 8 --base-url http://localhost:8000</pre>
+    <h3>Dashboard</h3>
+    <p>Ouvrir <code>dashboard.html</code> dans un navigateur. Il poll <code>runs/state.json</code> automatiquement.</p>
+    <h3>Tests</h3>
+    <pre>pytest tests/   # aucun GPU requis (Ctx.for_tests() injecte des stubs)</pre>
+  </section>
+
+  <!-- ── 9. POINTS NOTABLES ── -->
+  <section>
+    <h2>9. Points techniques notables</h2>
+
+    <div class="callout green">
+      <strong>Design by contract, pas by prompt</strong>
+      Les guardrails sont du code Python pur — pas des instructions dans le prompt. Un argument hors plage retourne un JSON d'erreur que le modèle lit et corrige. Le système ne peut pas sortir de la plage sûre même si le modèle hallucine.
+    </div>
+
+    <div class="callout green">
+      <strong>Mesure d'énergie précise sans sampling</strong>
+      NVML <code>GetTotalEnergyConsumption</code> est un compteur hardware cumulatif. Le delta entrée/sortie du contexte Python donne l'énergie réelle du run, sans erreur d'intégration trapézoïdale.
+    </div>
+
+    <div class="callout">
+      <strong>Fallback JSON robuste</strong>
+      Si le parser de tool calls vLLM échoue sur un edge case, l'agent relance avec un prompt forçant du JSON brut. Même chemin de dispatch — la démo reste opérationnelle quoi qu'il arrive.
+    </div>
+
+    <div class="callout">
+      <strong>Injectabilité totale pour les tests</strong>
+      <code>Ctx.for_tests()</code> remplace toutes les fonctions I/O (benchmark, power, HTTP) par des stubs. Tests unitaires complets sans GPU ni réseau.
+    </div>
+
+    <div class="callout red">
+      <strong>Limites actuelles</strong>
+      Le projet ne modifie pas (encore) la quantification ou les paramètres de mémoire KV (--gpu-memory-utilization). La plage du power cap est figée pour H100 PCIe. Le dataset de benchmark est synthétique.
+    </div>
+  </section>
+
+  <!-- ── 10. DÉPENDANCES ── -->
+  <section>
+    <h2>10. Dépendances</h2>
+    <table>
+      <thead><tr><th>Package</th><th>Usage</th></tr></thead>
+      <tbody>
+        <tr><td><code>pynvml</code></td><td>Accès NVML : énergie GPU, nom, VRAM</td></tr>
+        <tr><td><code>codecarbon</code></td><td>Fallback énergie si NVML indisponible</td></tr>
+        <tr><td><code>requests</code></td><td>Appels à l'API vLLM OpenAI-compatible, SerpAPI, OpenAIRE</td></tr>
+        <tr><td><code>pytest</code> (dev)</td><td>Suite de tests unitaires</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <div style="margin-top:56px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--ink2);">
+    Gemma Autopilot · Paris Gemma 4 Hackathon (42 Paris) · Licence Apache-2.0 · Rapport généré le 25 juillet 2026
+  </div>
+
+</div>
+</body>
+</html>
