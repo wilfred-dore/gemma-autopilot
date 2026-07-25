@@ -289,7 +289,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 <div class="tiles">
   <div class="tile"><svg class="tile-spark" id="spark-best" preserveAspectRatio="none"></svg><div class="k">Best throughput</div><div class="v green" id="t-best">—</div><div class="d" id="t-best-d">waiting for data…</div></div>
   <div class="tile"><svg class="tile-spark" id="spark-energy" preserveAspectRatio="none"></svg><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
-  <div class="tile"><div class="k">💰 Cost impact</div><div class="v green" id="t-savings">—</div><div class="d" id="t-savings-d">/ month saved vs. base model</div></div>
+  <div class="tile"><div class="k">💰 Cost impact</div><div class="v green" id="t-savings">—</div><div class="d" id="t-savings-d">/ month François would save on his GitHub Copilot bill</div></div>
   <div class="tile"><svg class="tile-spark" id="spark-ttft" preserveAspectRatio="none"></svg><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
 </div>
 
@@ -1202,7 +1202,7 @@ function renderSavings() {
   const amountText = '$' + monthlySavings.toLocaleString('en-US', { maximumFractionDigits: 0 });
 
   tileAmountEl.textContent = amountText;
-  tileDetailEl.textContent = `/ month vs. base model · ${fmt(savedFraction * 100, 1)}% fewer low-quality retries`;
+  tileDetailEl.textContent = `/ month · ${fmt(savedFraction * 100, 1)}% fewer low-quality retries · what François would save on his GitHub Copilot bill`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
