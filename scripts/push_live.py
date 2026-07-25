@@ -57,6 +57,10 @@ def main() -> None:
     p.add_argument("--model", default=None)
     p.add_argument("--precision", default=None)
 
+    # Structured decision summary (shown as a "Decision" card in the UI)
+    p.add_argument("--meta-json", default=None,
+                    help='JSON object, e.g. \'{"action":"run_benchmark","outcome":"improved","tags":["saturation"]}\'')
+
     args = p.parse_args()
 
     payload: dict = {
@@ -94,6 +98,13 @@ def main() -> None:
     if args.precision:                  config["precision"]               = args.precision
     if config:
         payload["config"] = config
+
+    if args.meta_json:
+        try:
+            payload["meta"] = json.loads(args.meta_json)
+        except json.JSONDecodeError as exc:
+            print(f"✗ --meta-json is not valid JSON: {exc}", file=sys.stderr)
+            sys.exit(1)
 
     url = args.endpoint.rstrip("/") + "/api/push"
     data = json.dumps(payload).encode()

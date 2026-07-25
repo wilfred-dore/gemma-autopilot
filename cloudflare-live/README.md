@@ -122,6 +122,15 @@ The journal will automatically:
     "mean_power_w": 298
   },
   "reasoning": "Agent's explanation before this action",
+  "meta": {                           // optional — structured decision summary shown in the UI
+    "action": "run_benchmark",
+    "params_changed": { "concurrency": { "from": 32, "to": 64 } },
+    "params_frozen":  { "max_num_seqs": 256, "enable_prefix_caching": true, "power_cap_w": null },
+    "hypothesis": "TTFT headroom suggests batch under-saturation",
+    "outcome": "improved",            // improved | regressed | neutral
+    "delta_vs_best": { "tokens_per_s": "+1.4%", "joules_per_token": "-2.1%" },
+    "tags": ["saturation", "guardrail-recovery"]
+  },
   "ts": "2026-07-25T10:00:00"        // ISO-8601
 }
 ```

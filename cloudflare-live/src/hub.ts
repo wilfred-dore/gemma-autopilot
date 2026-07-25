@@ -20,6 +20,7 @@ export class AgentHub extends DurableObject<Env> {
         metrics     TEXT,
         energy      TEXT,
         reasoning   TEXT,
+        meta        TEXT,
         ts          TEXT    NOT NULL,
         updated_at  INTEGER NOT NULL
       )
@@ -81,8 +82,8 @@ export class AgentHub extends DurableObject<Env> {
 
   private upsertRun(run: AgentRun): void {
     this.ctx.storage.sql.exec(
-      `INSERT INTO runs (id,parent_id,label,status,config,metrics,energy,reasoning,ts,updated_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?)
+      `INSERT INTO runs (id,parent_id,label,status,config,metrics,energy,reasoning,meta,ts,updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)
        ON CONFLICT(id) DO UPDATE SET
          parent_id  = excluded.parent_id,
          label      = excluded.label,
@@ -91,6 +92,7 @@ export class AgentHub extends DurableObject<Env> {
          metrics    = excluded.metrics,
          energy     = excluded.energy,
          reasoning  = excluded.reasoning,
+         meta       = excluded.meta,
          ts         = excluded.ts,
          updated_at = excluded.updated_at`,
       run.id,
@@ -101,6 +103,7 @@ export class AgentHub extends DurableObject<Env> {
       run.metrics ? JSON.stringify(run.metrics) : null,
       run.energy ? JSON.stringify(run.energy) : null,
       run.reasoning ?? null,
+      run.meta ? JSON.stringify(run.meta) : null,
       run.ts ?? new Date().toISOString(),
       Date.now(),
     );
@@ -119,6 +122,7 @@ export class AgentHub extends DurableObject<Env> {
         status: row.status as AgentRun["status"],
         config: row.config ? JSON.parse(row.config as string) : undefined,
         metrics: row.metrics ? JSON.parse(row.metrics as string) : undefined,
+        meta: row.meta ? JSON.parse(row.meta as string) : undefined,
         energy: row.energy ? JSON.parse(row.energy as string) : undefined,
         reasoning: (row.reasoning as string | null) ?? undefined,
         ts: row.ts as string,

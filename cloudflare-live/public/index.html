@@ -168,6 +168,30 @@ header .spacer{flex:1}
 .status-done{background:rgba(30,158,95,.12);color:var(--green)}
 .status-failed{background:rgba(229,72,58,.12);color:var(--red)}
 
+/* ── Decision / meta card ─────────────────────────────────────────────── */
+.decision-box{background:var(--bg);border-radius:12px;padding:10px 12px;margin-top:4px}
+.decision-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.decision-action{display:inline-flex;align-items:center;gap:6px;font:700 11px "JetBrains Mono",ui-monospace,monospace;
+  padding:3px 10px;border-radius:99px;background:rgba(155,81,224,.12);color:var(--purple);letter-spacing:.01em}
+.outcome-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 10px;border-radius:99px;text-transform:capitalize}
+.outcome-improved{background:rgba(30,158,95,.12);color:var(--green)}
+.outcome-regressed{background:rgba(229,72,58,.12);color:var(--red)}
+.outcome-neutral{background:rgba(107,106,95,.12);color:var(--ink2)}
+.param-diff{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;padding:5px 0;border-bottom:1px dashed var(--border)}
+.param-diff:last-child{border-bottom:none}
+.param-diff .p-name{color:var(--ink2);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px}
+.param-diff .p-vals{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.param-diff .p-vals .arrow{color:var(--ink2);margin:0 5px;font-weight:400}
+.hypothesis-box{font-style:italic;color:var(--ink2);font-size:12.5px;line-height:1.55;
+  background:var(--card);border-left:3px solid var(--purple);border-radius:0 10px 10px 0;padding:8px 10px;margin-top:8px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;padding:2px 9px;border-radius:99px;background:var(--pill);color:var(--ink2);font-weight:600;white-space:nowrap}
+.chip.delta-pos{background:rgba(30,158,95,.12);color:var(--green)}
+.chip.delta-neg{background:rgba(229,72,58,.12);color:var(--red)}
+.chip.tag-chip{background:rgba(66,133,244,.10);color:var(--blue)}
+.decision-sub{margin-top:9px;display:flex;flex-direction:column;gap:7px}
+.decision-sub-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin-bottom:3px}
+
 /* ── Leaderboard ──────────────────────────────────────────────────────── */
 table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
 th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
@@ -717,6 +741,7 @@ function showTooltip(event, run, maxSc, bi) {
     ` : ''}
     ${run.energy?.joules_per_token ? `<div class="tip-row"><span>J/token</span><span>${fmt(run.energy.joules_per_token,4)}</span></div>` : ''}
     <div class="tip-row"><span>Score</span><span>${s < 0 ? '—' : fmt(s)}</span></div>
+    ${run.meta?.outcome ? `<div class="tip-row"><span>Outcome</span><span>${run.meta.outcome}</span></div>` : ''}
   `;
   tip.style.display = 'block';
   moveTip(event);
@@ -793,12 +818,69 @@ function showDetail(run) {
     `;
   }
 
+  if (run.meta) {
+    html += renderDecisionBlock(run.meta);
+  }
+
   if (run.reasoning) {
     html += `<dt>Agent reasoning</dt><dd><div class="reasoning-box">${escHtml(run.reasoning)}</div></dd>`;
   }
 
   document.getElementById('detail-body').innerHTML = html;
   detailPanel.classList.add('open');
+}
+
+// Metrics where a LOWER value is actually the improvement (used to color deltas correctly)
+const LOWER_IS_BETTER = new Set(['joules', 'joules_per_token', 'mean_power_w', 'ttft_ms', 'itl_ms']);
+
+function fmtKey(k) {
+  return String(k).replace(/_/g, ' ');
+}
+
+function deltaClass(key, value) {
+  const s = String(value).trim();
+  if (s.startsWith('+')) return LOWER_IS_BETTER.has(key) ? 'delta-neg' : 'delta-pos';
+  if (s.startsWith('-')) return LOWER_IS_BETTER.has(key) ? 'delta-pos' : 'delta-neg';
+  return '';
+}
+
+function renderDecisionBlock(m) {
+  const outcomeClass = m.outcome === 'improved' ? 'outcome-improved'
+    : m.outcome === 'regressed' ? 'outcome-regressed' : 'outcome-neutral';
+  const outcomeIcon = m.outcome === 'improved' ? '▲' : m.outcome === 'regressed' ? '▼' : '●';
+
+  const changedHtml = m.params_changed ? Object.entries(m.params_changed).map(([k, v]) => `
+    <div class="param-diff">
+      <span class="p-name">${escHtml(fmtKey(k))}</span>
+      <span class="p-vals">${escHtml(String(v.from))}<span class="arrow">→</span>${escHtml(String(v.to))}</span>
+    </div>`).join('') : '';
+
+  const frozenHtml = m.params_frozen ? Object.entries(m.params_frozen)
+    .filter(([, v]) => v !== null && v !== undefined)
+    .map(([k, v]) => `<span class="chip">${escHtml(fmtKey(k))}=${escHtml(String(v))}</span>`).join('') : '';
+
+  const deltaHtml = m.delta_vs_best ? Object.entries(m.delta_vs_best).map(([k, v]) =>
+    `<span class="chip ${deltaClass(k, v)}">${escHtml(fmtKey(k))} ${escHtml(String(v))}</span>`).join('') : '';
+
+  const tagsHtml = (m.tags && m.tags.length)
+    ? m.tags.map(t => `<span class="chip tag-chip">#${escHtml(t)}</span>`).join('') : '';
+
+  return `
+    <dt>Decision</dt>
+    <dd>
+      <div class="decision-box">
+        <div class="decision-head">
+          ${m.action ? `<span class="decision-action">${escHtml(m.action)}</span>` : ''}
+          ${m.outcome ? `<span class="outcome-pill ${outcomeClass}">${outcomeIcon} ${escHtml(m.outcome)}</span>` : ''}
+        </div>
+        ${changedHtml}
+        ${m.hypothesis ? `<div class="hypothesis-box">“${escHtml(m.hypothesis)}”</div>` : ''}
+        ${frozenHtml ? `<div class="decision-sub"><div><div class="decision-sub-label">Frozen params</div><div class="chip-row">${frozenHtml}</div></div></div>` : ''}
+        ${deltaHtml ? `<div class="decision-sub"><div><div class="decision-sub-label">Δ vs best</div><div class="chip-row">${deltaHtml}</div></div></div>` : ''}
+        ${tagsHtml ? `<div class="decision-sub"><div class="chip-row">${tagsHtml}</div></div>` : ''}
+      </div>
+    </dd>
+  `;
 }
 
 function escHtml(s) {
@@ -847,15 +929,22 @@ function renderTrace(runs) {
   const labelById = new Map(runs.map(r => [r.id, r.label]));
   el.innerHTML = withReasoning.map(r => {
     const src = r.parent_id ? (labelById.get(r.parent_id) || r.parent_id) : 'root';
+    const outcome = r.meta?.outcome;
+    const outcomeIcon = outcome === 'improved' ? '▲' : outcome === 'regressed' ? '▼' : '●';
+    const tags = r.meta?.tags?.length
+      ? `<div class="chip-row" style="margin-top:6px">${r.meta.tags.map(t => `<span class="chip tag-chip">#${escHtml(t)}</span>`).join('')}</div>`
+      : '';
     return `
     <div class="t-item ${r.status === 'running' ? 'running' : ''}">
       <div class="t-meta">
         <span class="t-src" title="Source run">${escHtml(src)}</span>
         <span class="t-label">${escHtml(r.label)}</span>
         <span>${r.ts ? new Date(r.ts).toLocaleTimeString() : ''}</span>
+        ${outcome ? `<span class="outcome-pill outcome-${outcome === 'improved' ? 'improved' : outcome === 'regressed' ? 'regressed' : 'neutral'}" style="font-size:10px;padding:1px 8px">${outcomeIcon} ${escHtml(outcome)}</span>` : ''}
         ${r.status === 'running' ? '<span style="color:var(--gold)">● running</span>' : ''}
       </div>
       <div class="t-text">${escHtml(r.reasoning.slice(0, 300))}${r.reasoning.length > 300 ? '…' : ''}</div>
+      ${tags}
     </div>
   `;
   }).join('') + '<span class="t-cursor">▋</span>';
@@ -1367,7 +1456,16 @@ document.getElementById('demo-btn').onclick = () => {
       config:{max_num_seqs:192, enable_prefix_caching:true, concurrency:20, power_cap_w:280},
       metrics:{tokens_per_s:161.3, ttft_ms:445, itl_ms:11.8},
       energy:{joules:975, joules_per_token:0.0033, mean_power_w:279},
-      reasoning:'Increase batch to 192 with power cap — best score so far. Gains flattening, ~1 more iteration.' },
+      reasoning:'Increase batch to 192 with power cap — best score so far. Gains flattening, ~1 more iteration.',
+      meta:{
+        action:'run_benchmark',
+        params_changed:{ concurrency:{ from:32, to:64 } },
+        params_frozen:{ max_num_seqs:256, enable_prefix_caching:true, power_cap_w:null },
+        hypothesis:'TTFT headroom suggests batch under-saturation',
+        outcome:'improved',
+        delta_vs_best:{ tokens_per_s:'+1.4%', joules_per_token:'-2.1%' },
+        tags:['saturation','guardrail-recovery'],
+      } },
     { id:'a5', parent_id:'a4', label:'agent-iter-5', status:'running', ts:now(),
       reasoning:'Trying concurrency=24 to probe queue saturation limit before calling report_done.' },
   ];

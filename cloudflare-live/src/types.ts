@@ -24,6 +24,16 @@ export interface AgentRun {
   };
   /** The agent's reasoning text before this action */
   reasoning?: string;
+  /** Structured decision metadata — what changed, why, and how it turned out */
+  meta?: {
+    action?: string;
+    params_changed?: Record<string, { from: string | number | boolean; to: string | number | boolean }>;
+    params_frozen?: Record<string, string | number | boolean | null>;
+    hypothesis?: string;
+    outcome?: "improved" | "regressed" | "neutral" | string;
+    delta_vs_best?: Record<string, string | number>;
+    tags?: string[];
+  };
   ts: string;
 }
 
