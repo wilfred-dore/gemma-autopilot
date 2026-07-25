@@ -211,6 +211,12 @@ tr.lb-viol td:last-child{color:var(--red)}
 @keyframes winnerGlow{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 12px rgba(232,166,0,.28),var(--shadow)}}
 
 .arena-log{text-align:center;font-size:12px;font-weight:600;color:var(--ink2);padding:2px 18px 18px;min-height:18px;transition:color .3s;position:relative;z-index:1}
+.arena-stats{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 18px 12px;flex-wrap:wrap}
+.a-stat{display:flex;align-items:baseline;gap:5px}
+.a-stat-k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+.a-stat-v{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+.a-stat-v.factor{color:var(--purple)}
+.a-stat-sep{color:var(--border)}
 
 @media(max-width:640px){
   .arena{flex-direction:column;gap:4px}
@@ -279,6 +285,13 @@ tr.lb-viol td:last-child{color:var(--red)}
       <div class="f-bar"><div class="f-bar-fill" id="challenger-bar"></div></div>
       <div class="f-score" id="challenger-score">—</div>
     </div>
+  </div>
+  <div class="arena-stats" id="arena-stats">
+    <div class="a-stat"><span class="a-stat-k">Min</span><span class="a-stat-v" id="arena-min">—</span></div>
+    <span class="a-stat-sep">·</span>
+    <div class="a-stat"><span class="a-stat-k">Max</span><span class="a-stat-v" id="arena-max">—</span></div>
+    <span class="a-stat-sep">·</span>
+    <div class="a-stat"><span class="a-stat-k">Max ÷ Min</span><span class="a-stat-v factor" id="arena-factor">—</span></div>
   </div>
   <div class="arena-log" id="arena-log">No runs yet — start the autopilot to begin round 1.</div>
 </div>
@@ -841,6 +854,14 @@ function renderArena(runs) {
 
   document.getElementById('challenger-role').textContent =
     selectedChallengerId !== 'auto' ? 'Challenger · iteration view' : 'Challenger · this run';
+
+  const throughputs = runs.filter(r => r.metrics).map(r => r.metrics.tokens_per_s);
+  const minV = throughputs.length ? Math.min(...throughputs) : null;
+  const maxV = throughputs.length ? Math.max(...throughputs) : null;
+  const factor = (minV != null && minV > 0) ? maxV / minV : null;
+  document.getElementById('arena-min').textContent = minV != null ? fmt(minV) + ' t/s' : '—';
+  document.getElementById('arena-max').textContent = maxV != null ? fmt(maxV) + ' t/s' : '—';
+  document.getElementById('arena-factor').textContent = factor != null ? fmt(factor, 2) + '×' : '—';
 
   const maxSc = Math.max(1, 0, ...runs.filter(r => r.metrics).map(r => score(r)));
 
