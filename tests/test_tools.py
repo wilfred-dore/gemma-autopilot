@@ -1,0 +1,32 @@
+import json
+
+from autopilot.tools import Ctx, dispatch
+
+
+def test_power_cap_out_of_range_rejected():
+    out = json.loads(dispatch("set_power_cap", {"watts": 20}, Ctx.for_tests()))
+    assert out["error"] == "rejected"
+    assert "range" in out["reason"]
+
+
+def test_batch_out_of_range_rejected():
+    out = json.loads(dispatch(
+        "run_benchmark",
+        {"max_num_seqs": 9999, "enable_prefix_caching": True, "concurrency": 8},
+        Ctx.for_tests()))
+    assert out["error"] == "rejected"
+
+
+def test_benchmark_dispatches_with_pending_power_cap():
+    ctx = Ctx.for_tests()
+    dispatch("set_power_cap", {"watts": 275}, ctx)
+    out = json.loads(dispatch(
+        "run_benchmark",
+        {"max_num_seqs": 64, "enable_prefix_caching": True, "concurrency": 8},
+        ctx))
+    assert out["cfg"]["power_cap_w"] == 275
+
+
+def test_unknown_tool_is_soft_error():
+    out = json.loads(dispatch("rm_rf", {}, Ctx.for_tests()))
+    assert "unknown tool" in out["error"]
