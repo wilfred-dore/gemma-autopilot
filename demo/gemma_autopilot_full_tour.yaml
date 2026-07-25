@@ -1,0 +1,191 @@
+# DemoDSL config: full feature tour of the Gemma² live dashboard.
+# Opens with a short 3Blue1Brown style explainer of the optimization loop,
+# then walks through every part of the live dashboard.
+#
+# Run (serve the repo root over http first, demodsl only accepts http/https):
+#   python3 -m http.server 8931 --directory /Users/famat/Desktop/hacks/gemma-autopilot &
+#   demodsl run demo/gemma_autopilot_full_tour.yaml -o demo/output --force
+
+metadata:
+  title: "Gemma² Autopilot Live Dashboard: Full Feature Tour"
+  description: "A complete walkthrough of the Gemma² live dashboard, the self optimizing Gemma 4 deployment agent for vLLM."
+  version: "1.1.0"
+
+voice:
+  engine: "gtts"
+  voice_id: "en"
+  speed: 1.0
+
+subtitle:
+  enabled: true
+  style: "classic"
+  position: "bottom"
+
+scenarios:
+  - name: "The optimization loop, visualized"
+    url: "http://localhost:8931/demo/assets/optimization_explainer.html"
+    browser: "chrome"
+    viewport:
+      width: 1440
+      height: 900
+    steps:
+      - action: "navigate"
+        url: "http://localhost:8931/demo/assets/optimization_explainer.html"
+        narration: "Before we open the dashboard, here is the whole idea in one picture."
+        wait: 3.5
+
+      - action: "pause"
+        wait: 4.0
+        narration: "Every run the agent tries lands somewhere on this plane: throughput on one axis, energy efficiency on the other."
+
+      - action: "pause"
+        wait: 3.9
+        narration: "The human baseline starts conservative, in brown, on the low end of both axes."
+
+      - action: "pause"
+        wait: 4.0
+        narration: "The agent takes over. Iteration one pushes batching and prefix caching further, and throughput jumps."
+
+      - action: "pause"
+        wait: 4.9
+        narration: "Iteration two pushes harder, but time to first token climbs past 500 milliseconds. Rejected. That branch is a dead end."
+
+      - action: "pause"
+        wait: 4.5
+        narration: "So the agent backtracks and pulls a different lever instead: it caps GPU power. Iteration three recovers, and efficiency improves a lot."
+
+      - action: "pause"
+        wait: 4.6
+        narration: "One more step, iteration four, and this becomes the new champion: best throughput, best efficiency, constraint respected."
+
+      - action: "pause"
+        wait: 4.5
+        narration: "The whole loop is really just this equation: score equals tokens per second if time to first token stays under 500 milliseconds, otherwise zero."
+
+      - action: "pause"
+        wait: 3.0
+        narration: "Now let's watch that same loop, live, in the dashboard."
+
+  - name: "Full dashboard tour"
+    url: "http://localhost:8931/cloudflare-live/public/index.html?dev=true"
+    browser: "chrome"
+    viewport:
+      width: 1440
+      height: 900
+    cursor:
+      visible: true
+      style: "dot"
+      color: "#4285f4"
+      click_effect: "ripple"
+    steps:
+      - action: "navigate"
+        url: "http://localhost:8931/cloudflare-live/public/index.html?dev=true"
+        narration: "This is Gemma squared, a self optimizing deployment agent for Gemma 4 on vLLM. It benchmarks itself, diagnoses bottlenecks, and rewrites its own serving config, round after round."
+        wait: 3.5
+
+      - action: "click"
+        locator:
+          type: "css"
+          value: "#demo-btn"
+        narration: "Let's load a sample run so you can see every part of the dashboard in action."
+        wait: 2.0
+        effects:
+          - type: "spotlight"
+            duration: 1.5
+            intensity: 0.7
+
+      - action: "pause"
+        wait: 4.0
+        narration: "At the top, four live tiles track the best throughput found so far, the best energy efficiency in joules per token, the monthly Copilot bill savings that throughput translates into, and the hard constraint the agent must respect: time to first token under 500 milliseconds."
+
+      - action: "scroll"
+        direction: "down"
+        pixels: 260
+        smooth_scroll: true
+        narration: "Below that is the self improvement arena. Every new configuration, the challenger, fights the current best, the teacher, and only real improvements get crowned."
+        wait: 4.0
+
+      - action: "pause"
+        wait: 3.0
+        narration: "You can rewind and inspect any past iteration as the challenger using the selector at the top of the card."
+
+      - action: "click"
+        locator:
+          type: "css"
+          value: "#iter-select"
+        narration: "It lists every run the agent has ever tried."
+        wait: 1.5
+
+      - action: "pause"
+        wait: 3.5
+        narration: "Right next to the arena, the Magic Quadrant plots our fine tuned Gemma 4 against the rest of the Gemma family: throughput on one axis, energy efficiency on the other."
+
+      - action: "scroll"
+        direction: "down"
+        pixels: 480
+        smooth_scroll: true
+        narration: "Scrolling down, the exploration tree renders every single run as a node, with parent to child edges showing which configuration each one evolved from. You can scroll to zoom, drag to pan, and click any node for its full detail."
+        wait: 4.0
+
+      - action: "click"
+        locator:
+          type: "css"
+          value: ".node-circle"
+        narration: "Clicking a node opens its run details: the exact config, the measured metrics, and the agent's own reasoning."
+        wait: 2.5
+
+      - action: "click"
+        locator:
+          type: "css"
+          value: "#detail-close"
+        wait: 1.0
+
+      - action: "pause"
+        wait: 3.0
+        narration: "Next to the tree, the agent reasoning log streams the model's own explanation for every decision it makes, live, as it happens."
+
+      - action: "scroll"
+        direction: "down"
+        pixels: 500
+        smooth_scroll: true
+        narration: "Finally, the leaderboard ranks every run by score: tokens per second, TTFT, joules per token, and it zeroes out any run that violates the latency constraint."
+        wait: 4.0
+
+      - action: "scroll"
+        direction: "up"
+        pixels: 1500
+        smooth_scroll: true
+        wait: 1.5
+
+      - action: "click"
+        locator:
+          type: "css"
+          value: "#how-btn"
+        narration: "One last thing: the how it works panel walks through the whole loop. Benchmark, diagnose, act, re benchmark, repeat."
+        wait: 4.0
+        effects:
+          - type: "spotlight"
+            duration: 2.0
+            intensity: 0.8
+
+      - action: "click"
+        locator:
+          type: "css"
+          value: "#how-close"
+        narration: "This whole project was built in one day at the Paris Gemma 4 Hackathon at 42 Paris, and the source is fully open on GitHub."
+        wait: 3.0
+
+pipeline:
+  - generate_narration: {}
+  - edit_video: {}
+  - mix_audio: {}
+  - optimize:
+      format: "mp4"
+      codec: "h264"
+      quality: "high"
+
+output:
+  filename: "gemma_autopilot_full_tour.mp4"
+  directory: "output/"
+  formats:
+    - "mp4"

@@ -8,6 +8,15 @@ Built in one day at the Paris Gemma 4 Hackathon (42 Paris). Full writeup on Kagg
 
 *Scaffold: full README lands with the code (architecture, quickstart, metrics definitions, guardrails).*
 
+## Demo video
+
+<video src="demo/output/gemma_autopilot_full_tour.mp4" controls width="100%">
+  Your browser does not support the video tag — download it directly:
+  <a href="demo/output/gemma_autopilot_full_tour.mp4">gemma_autopilot_full_tour.mp4</a>
+</video>
+
+A full tour of the live dashboard: the optimization loop explained visually, then every panel of the Gemma² arena (exploration tree, leaderboard, Magic Quadrant, energy metrics).
+
 ## Optimization levers (the agent's action space, explained)
 
 | Lever | What it does | Typical effect |
