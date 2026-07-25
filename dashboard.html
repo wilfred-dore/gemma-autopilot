@@ -45,6 +45,13 @@
   .trace{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
   .titem{border:1px solid var(--border);border-left:3px solid var(--entity);border-radius:8px;padding:8px 10px;font-size:13px}
   .titem .m{color:var(--ink2);font-size:11px;margin-bottom:2px}
+  .bar-row{display:grid;grid-template-columns:1fr 2fr auto;align-items:center;gap:8px;margin-bottom:8px;font-size:13px}
+  .bar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-track{background:var(--grid);border-radius:5px;height:10px;overflow:hidden}
+  .bar-fill{background:var(--ink2);height:100%;border-radius:5px}
+  .bar-fill.mine{background:var(--entity)}
+  .bar-val{font-variant-numeric:tabular-nums;color:var(--ink2);white-space:nowrap}
+  .chip.mine{color:var(--entity);border-color:var(--entity)}
   #tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--border);
     border-radius:8px;padding:6px 9px;font-size:12px;display:none;z-index:9;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 </style>
@@ -61,6 +68,15 @@
 <div class="row">
   <div class="card"><h2>Leaderboard</h2><div id="lb"></div></div>
   <div class="card"><h2>Agent reasoning trace</h2><div class="trace" id="trace"></div></div>
+</div>
+
+<div class="card" id="mcCard" style="margin-bottom:18px">
+  <h2>Model comparison — fine-tuned Gemma 4 vs. the rest of the family</h2>
+  <div class="sub" id="mcNote" style="margin:-4px 0 12px"></div>
+  <div class="row">
+    <div><div style="font-size:12px;color:var(--ink2);margin-bottom:6px">Quality (LLM-judge, 0–100)</div><div id="mcQuality"></div></div>
+    <div><div style="font-size:12px;color:var(--ink2);margin-bottom:6px">Throughput (tok/s, matched concurrency)</div><div id="mcSpeed"></div></div>
+  </div>
 </div>
 <div id="tip"></div>
 
@@ -127,6 +143,26 @@ function trace(s){
     `<div class="titem"><div class="m">iter ${t.iter} · ${t.label} · ${t.ts}</div>${t.text}</div>`).join('');
 }
 
+function bars(el, rows, key, unit, dec){
+  const max=Math.max(...rows.map(key))||1;
+  document.getElementById(el).innerHTML=rows.map(r=>{
+    const v=key(r), pct=Math.max(2, v/max*100);
+    return `<div class="bar-row">
+      <div class="bar-label">${r.label}${r.finetuned?' <span class="chip mine">ours</span>':''}</div>
+      <div class="bar-track"><div class="bar-fill${r.finetuned?' mine':''}" style="width:${pct}%"></div></div>
+      <div class="bar-val">${fmt(v,dec)}${unit}</div></div>`;
+  }).join('');
+}
+
+function modelComparison(mc){
+  const card=document.getElementById('mcCard');
+  if(!mc||!mc.models||!mc.models.length){ card.style.display='none'; return; }
+  card.style.display='';
+  document.getElementById('mcNote').textContent=(mc.objective&&mc.objective.note)||'';
+  bars('mcQuality', mc.models.slice().sort((a,b)=>b.quality_score-a.quality_score), r=>r.quality_score, '', 0);
+  bars('mcSpeed', mc.models.slice().sort((a,b)=>b.tokens_per_s-a.tokens_per_s), r=>r.tokens_per_s, ' tok/s', 0);
+}
+
 function render(s){
   const runs=(s.runs||[]);
   const human=runs.find(r=>r.label==='human-expert');
@@ -143,6 +179,11 @@ async function tick(){
     document.getElementById('mode').textContent=REPLAY?'replay':'live';
     render(s);
   }catch(e){ document.getElementById('mode').textContent='waiting for first run…'; }
+  try{
+    const mcUrl=REPLAY?'datasets/model_comparison.sample.json':'runs/model_comparison.json';
+    const mc=await (await fetch(mcUrl+'?t='+Date.now())).json();
+    modelComparison(mc);
+  }catch(e){ modelComparison(null); }
 }
 tick(); if(!REPLAY) setInterval(tick, 2000);
 </script>

@@ -60,11 +60,13 @@ header .spacer{flex:1}
 
 /* ── Metric tiles ─────────────────────────────────────────────────────── */
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
-.tile{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.tile{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tile .k,.tile .v,.tile .d{position:relative;z-index:1}
 .tile .k{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:6px}
 .tile .v{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
 .tile .d{font-size:12px;color:var(--ink2);margin-top:4px}
 .tile .v.green{color:var(--green)} .tile .v.gold{color:var(--gold)} .tile .v.blue{color:var(--blue)}
+.tile-spark{position:absolute;left:0;right:0;bottom:0;width:100%;height:60%;opacity:.4;pointer-events:none;z-index:0;display:block}
 
 /* ── Main grid ────────────────────────────────────────────────────────── */
 .main-grid{display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px}
@@ -234,10 +236,10 @@ tr.lb-viol td:last-child{color:var(--red)}
 
 <!-- ── Tiles ──────────────────────────────────────────────────────────── -->
 <div class="tiles">
-  <div class="tile"><div class="k">Best throughput</div><div class="v green" id="t-best">—</div><div class="d" id="t-best-d">waiting for data…</div></div>
-  <div class="tile"><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
-  <div class="tile"><div class="k">Total runs</div><div class="v blue" id="t-iters">0</div><div class="d" id="t-active">0 active</div></div>
-  <div class="tile"><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-best" preserveAspectRatio="none"></svg><div class="k">Best throughput</div><div class="v green" id="t-best">—</div><div class="d" id="t-best-d">waiting for data…</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-energy" preserveAspectRatio="none"></svg><div class="k">Best energy</div><div class="v gold" id="t-energy">—</div><div class="d">joules / token ↓ better</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-iters" preserveAspectRatio="none"></svg><div class="k">Total runs</div><div class="v blue" id="t-iters">0</div><div class="d" id="t-active">0 active</div></div>
+  <div class="tile"><svg class="tile-spark" id="spark-ttft" preserveAspectRatio="none"></svg><div class="k">Constraint</div><div class="v" id="t-ttft">—</div><div class="d">TTFT ≤ 500 ms</div></div>
 </div>
 
 <!-- ── Self-improvement arena ───────────────────────────────────────────── -->
@@ -314,6 +316,19 @@ tr.lb-viol td:last-child{color:var(--red)}
       </tr></thead>
       <tbody id="lb-body"><tr><td colspan="6" style="color:var(--ink2);text-align:center;padding:20px">Waiting for runs…</td></tr></tbody>
     </table>
+  </div>
+</div>
+
+<!-- ── Magic Quadrant ──────────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:10px">
+  <div class="card-head">🎯 Magic Quadrant <span style="font-weight:400;margin-left:4px">fine-tuned Gemma 4 vs. the rest of the Gemma family</span></div>
+  <div class="card-body">
+    <div id="mq-note" style="font-size:12px;color:var(--ink2);margin-bottom:10px">Loading model comparison…</div>
+    <svg id="mq-svg" style="width:100%;height:420px;display:block"></svg>
+    <div class="legend" style="border-top:none;padding-top:0">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Fine-tuned Gemma 4 (ours)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Other Gemma models</div>
+    </div>
   </div>
 </div>
 
@@ -738,6 +753,48 @@ function renderTiles(runs) {
   document.getElementById('t-active').textContent = `${active} active`;
   document.getElementById('t-ttft').textContent = done.length ? `${okCount}/${done.length} pass` : '—';
   document.getElementById('t-ttft').style.color = done.length && okCount < done.length ? 'var(--gold)' : 'var(--green)';
+
+  const orderedDone = done.slice().sort((a, b) => new Date(a.ts || 0) - new Date(b.ts || 0));
+  renderSparkline('spark-best', orderedDone.map(r => r.metrics.tokens_per_s), '#1e9e5f');
+  renderSparkline('spark-energy', orderedDone.map(r => r.energy?.joules_per_token).filter(v => v != null), '#e8a600', { invert: true });
+  renderSparkline('spark-iters', runs.map((_, i) => i + 1), '#4285f4');
+  renderSparkline('spark-ttft', orderedDone.map(r => r.metrics.ttft_ms), okCount < done.length ? '#e8a600' : '#1e9e5f', { invert: true });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Generic faint background sparkline for a KPI tile
+// ═══════════════════════════════════════════════════════════════════════════
+function renderSparkline(svgId, values, color, opts = {}) {
+  const el = document.getElementById(svgId);
+  if (!el) return;
+  const svg = d3.select(el);
+  svg.selectAll('*').remove();
+
+  const w = el.clientWidth || el.parentElement.clientWidth || 160;
+  const h = el.clientHeight || 44;
+  svg.attr('viewBox', `0 0 ${w} ${h}`);
+  if (values.length < 2 || w === 0 || h === 0) return;
+
+  const domain = opts.invert
+    ? [d3.max(values), Math.min(0, d3.min(values))]
+    : [Math.min(0, d3.min(values)), Math.max(1, d3.max(values))];
+  const x = d3.scalePoint().domain(d3.range(values.length)).range([2, w - 2]).padding(0.5);
+  const y = d3.scaleLinear().domain(domain).nice().range([h - 2, 4]);
+
+  const gradId = svgId + '-grad';
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient')
+    .attr('id', gradId).attr('x1', '0').attr('y1', '0').attr('x2', '0').attr('y2', '1');
+  grad.append('stop').attr('offset', '0%').attr('stop-color', color).attr('stop-opacity', 0.28);
+  grad.append('stop').attr('offset', '100%').attr('stop-color', color).attr('stop-opacity', 0);
+
+  const area = d3.area().x((_, i) => x(i)).y0(h).y1((d, i) => y(values[i])).curve(d3.curveMonotoneX);
+  const line = d3.line().x((_, i) => x(i)).y((d, i) => y(values[i])).curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(values).attr('d', area).attr('fill', `url(#${gradId})`);
+  svg.append('path').datum(values).attr('d', line)
+    .attr('fill', 'none').attr('stroke', color).attr('stroke-width', 2)
+    .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -898,6 +955,110 @@ function renderProgressChart(runs) {
 }
 
 window.addEventListener('resize', () => renderProgressChart(allRuns));
+window.addEventListener('resize', () => renderTiles(allRuns));
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Magic Quadrant — quality (LLM-judge) vs. ability to execute (tok/s)
+// Reads public/model-comparison.json, written by `python -m autopilot.model_compare`
+// (falls back to the illustrative replay numbers shipped in that file).
+// ═══════════════════════════════════════════════════════════════════════════
+let modelComparison = null;
+
+async function loadModelComparison() {
+  try {
+    const r = await fetch('model-comparison.json?t=' + Date.now());
+    if (r.ok) modelComparison = await r.json();
+  } catch (e) { /* optional panel — stays empty if the file is missing */ }
+  renderQuadrant();
+}
+
+function renderQuadrant() {
+  const svgEl = document.getElementById('mq-svg');
+  const svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+  const note = document.getElementById('mq-note');
+
+  const models = (modelComparison?.models || []).filter(m => !m.error && m.quality_score != null);
+  if (!models.length) {
+    note.textContent = 'No model-comparison data yet — run `python -m autopilot.model_compare`.';
+    return;
+  }
+  note.textContent = modelComparison.objective?.note
+    || `Quality: ${modelComparison.objective?.quality_metric || 'LLM-judge score'} · Speed: ${modelComparison.objective?.speed_metric || 'tokens/s'}`;
+
+  const w = svgEl.clientWidth || 700, h = 420;
+  const P = { l: 56, r: 30, t: 20, b: 46 };
+  svg.attr('viewBox', `0 0 ${w} ${h}`);
+
+  const qVals = models.map(m => m.quality_score);
+  const sVals = models.map(m => m.tokens_per_s);
+  const xDom = [Math.min(0, d3.min(qVals) - 5), Math.max(100, d3.max(qVals) + 5)];
+  const x = d3.scaleLinear().domain(xDom).range([P.l, w - P.r]);
+  const y = d3.scaleLinear().domain([0, d3.max(sVals) * 1.15]).range([h - P.b, P.t]);
+
+  const midX = x((xDom[0] + xDom[1]) / 2);
+  const midY = y(d3.max(sVals) * 1.15 / 2);
+
+  const quads = [
+    { x0: P.l, x1: midX, y0: P.t, y1: midY, fill: '#4285f409', label: 'CHALLENGERS', anchor: 'start', tx: P.l + 8, ty: P.t + 18 },
+    { x0: midX, x1: w - P.r, y0: P.t, y1: midY, fill: '#e8a60014', label: 'LEADERS', anchor: 'end', tx: w - P.r - 8, ty: P.t + 18 },
+    { x0: P.l, x1: midX, y0: midY, y1: h - P.b, fill: '#9a988c0c', label: 'NICHE PLAYERS', anchor: 'start', tx: P.l + 8, ty: h - P.b - 10 },
+    { x0: midX, x1: w - P.r, y0: midY, y1: h - P.b, fill: '#1e9e5f0c', label: 'VISIONARIES', anchor: 'end', tx: w - P.r - 8, ty: h - P.b - 10 },
+  ];
+  const qg = svg.append('g');
+  quads.forEach(q => {
+    qg.append('rect').attr('x', q.x0).attr('y', q.y0).attr('width', q.x1 - q.x0).attr('height', q.y1 - q.y0).attr('fill', q.fill);
+    qg.append('text').attr('x', q.tx).attr('y', q.ty).attr('text-anchor', q.anchor)
+      .attr('font-size', 10).attr('font-weight', 700).style('letter-spacing', '.08em')
+      .attr('fill', 'var(--ink2)').text(q.label);
+  });
+
+  svg.append('line').attr('x1', midX).attr('x2', midX).attr('y1', P.t).attr('y2', h - P.b)
+    .attr('stroke', 'var(--border)').attr('stroke-dasharray', '4 3');
+  svg.append('line').attr('x1', P.l).attr('x2', w - P.r).attr('y1', midY).attr('y2', midY)
+    .attr('stroke', 'var(--border)').attr('stroke-dasharray', '4 3');
+
+  svg.append('text').attr('x', (P.l + w - P.r) / 2).attr('y', h - 8).attr('text-anchor', 'middle')
+    .attr('font-size', 11).attr('fill', 'var(--ink2)').text('Completeness of vision  →  LLM-judge quality score (0–100)');
+  svg.append('text').attr('x', -h / 2).attr('y', 16).attr('transform', 'rotate(-90)').attr('text-anchor', 'middle')
+    .attr('font-size', 11).attr('fill', 'var(--ink2)').text('Ability to execute  →  throughput (tokens/s)');
+
+  const node = svg.selectAll('g.mq-node').data(models).enter().append('g').attr('class', 'mq-node')
+    .attr('transform', m => `translate(${x(m.quality_score)},${y(m.tokens_per_s)})`)
+    .style('cursor', 'pointer')
+    .on('mousemove', (e, m) => showMqTip(e, m))
+    .on('mouseleave', hideTip);
+
+  node.append('circle')
+    .attr('r', m => m.finetuned ? 13 : 9)
+    .attr('fill', m => m.finetuned ? 'var(--gold)' : 'var(--blue)')
+    .attr('fill-opacity', 0.85)
+    .attr('stroke', m => m.finetuned ? 'var(--gold)' : 'var(--blue)')
+    .attr('stroke-width', 2);
+
+  node.filter(m => m.finetuned).append('text')
+    .attr('y', -19).attr('text-anchor', 'middle').attr('font-size', 13).text('★');
+
+  node.append('text')
+    .attr('y', m => (m.finetuned ? 13 : 9) + 15).attr('text-anchor', 'middle')
+    .attr('font-size', 11).attr('font-weight', m => m.finetuned ? 700 : 500)
+    .attr('fill', 'var(--ink)').text(m => m.label.replace(' (fine-tuned, ours)', '').replace(' (base)', ' base'));
+}
+
+function showMqTip(event, m) {
+  tip.innerHTML = `
+    <div class="tip-label" style="color:${m.finetuned ? 'var(--gold)' : 'var(--blue)'}">${escHtml(m.label)}</div>
+    <div class="tip-row"><span>Quality</span><span>${fmt(m.quality_score)}</span></div>
+    <div class="tip-row"><span>Tokens/s</span><span>${fmt(m.tokens_per_s)}</span></div>
+    <div class="tip-row"><span>TTFT</span><span>${fmt(m.ttft_ms, 0)} ms</span></div>
+    <div class="tip-row"><span>J/token</span><span>${fmt(m.joules_per_token, 3)}</span></div>
+  `;
+  tip.style.display = 'block';
+  moveTip(event);
+}
+
+window.addEventListener('resize', renderQuadrant);
+loadModelComparison();
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Main render
