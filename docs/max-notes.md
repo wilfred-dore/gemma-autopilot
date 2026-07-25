@@ -8,8 +8,9 @@ Working notes on the max-exploration branch. Goal: a measured MAX column next to
 |---|---|---|
 | 1 | pixi + max-nightly channel, Brev host (CUDA 12.8 driver) | crashed at startup, driver too old for the nightly kernels |
 | 2 | pixi + max-nightly, RunPod H100 SXM pod | `max serve` compiled the "vision + language" graph for 28 minutes, then worker Killed (OOM) at 15:26. Sentinel kept polling a dead server. Logs preserved: `/workspace/sprint.log`, `/workspace/max-serve.log` on pod vbojpsjqrs1m6v (stopped) |
-| 3 | official Docker image `modular/max-nvidia-full:latest`, RunPod H100, `--model-path google/gemma-4-12B-it` | in flight (pod esi69jn6tqsqm7) |
-| 4 | same image, RunPod A40, `--model-path google/gemma-4-E4B-it` (small graph = short compile; also the edge variant our writeup cites) | in flight (pod s1z2cx2sjdlw2d) |
+| 3 | official Docker image `modular/max-nvidia-full:latest`, RunPod H100, `--model-path google/gemma-4-12B-it` | container crash-loop (uptime resets to seconds, CPU/GPU 0%); port never opened in 40 min; pod stopped |
+| 4 | same image, RunPod A40, `--model-path google/gemma-4-E4B-it` | same instant crash-loop on a different GPU and model size: systemic, not OOM. Diagnosis: the stable `latest` tag predates Gemma 4 day-zero support, which lives in the nightlies (hence the handbook's max-nightly channel) |
+| 5 | `modular/max-nvidia-full:nightly` (built 2026-07-25, the day-zero build), RunPod A40, E4B | in flight (pod khep922hntchw7) |
 
 ## Lessons
 
