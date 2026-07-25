@@ -158,7 +158,10 @@ tr.lb-viol td:last-child{color:var(--red)}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
 /* ── Self-improvement arena ───────────────────────────────────────────── */
-.arena{display:flex;align-items:center;justify-content:center;gap:14px;padding:30px 18px 8px;flex-wrap:wrap}
+#arena-card{position:relative}
+#arena-progress{position:absolute;left:0;right:0;top:47px;bottom:0;width:100%;height:calc(100% - 47px);
+  pointer-events:none;opacity:.55;z-index:0;display:block}
+.arena{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:14px;padding:30px 18px 8px;flex-wrap:wrap}
 .fighter{display:flex;flex-direction:column;align-items:center;width:190px;text-align:center;position:relative}
 .crown-badge{position:absolute;top:-16px;font-size:20px;animation:crownBob 2.2s ease-in-out infinite}
 @keyframes crownBob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-4px) rotate(8deg)}}
@@ -202,7 +205,7 @@ tr.lb-viol td:last-child{color:var(--red)}
 .fighter.winner .avatar{animation:winnerGlow .9s ease-in-out 2}
 @keyframes winnerGlow{0%,100%{box-shadow:var(--shadow)}50%{box-shadow:0 0 0 12px rgba(232,166,0,.28),var(--shadow)}}
 
-.arena-log{text-align:center;font-size:12px;font-weight:600;color:var(--ink2);padding:2px 18px 18px;min-height:18px;transition:color .3s}
+.arena-log{text-align:center;font-size:12px;font-weight:600;color:var(--ink2);padding:2px 18px 18px;min-height:18px;transition:color .3s;position:relative;z-index:1}
 
 @media(max-width:640px){
   .arena{flex-direction:column;gap:4px}
@@ -238,8 +241,9 @@ tr.lb-viol td:last-child{color:var(--red)}
 </div>
 
 <!-- ── Self-improvement arena ───────────────────────────────────────────── -->
-<div class="card" style="margin-bottom:12px">
+<div class="card" id="arena-card" style="margin-bottom:12px">
   <div class="card-head">⚔️ Self-improvement arena <span style="font-weight:400;margin-left:4px">the challenger fights the teacher, round after round</span></div>
+  <svg id="arena-progress" preserveAspectRatio="none"></svg>
   <div class="arena">
     <div class="fighter teacher" id="fighter-teacher">
       <div class="crown-badge">👑</div>
@@ -826,12 +830,76 @@ function spawnSparks() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// Background progression chart — faint area/line of score across all runs
+// ═══════════════════════════════════════════════════════════════════════════
+function renderProgressChart(runs) {
+  const el = document.getElementById('arena-progress');
+  if (!el) return;
+  const svg = d3.select(el);
+
+  const ordered = runs
+    .filter(r => r.metrics && r.status !== 'running')
+    .slice()
+    .sort((a, b) => new Date(a.ts || 0) - new Date(b.ts || 0));
+
+  const w = el.clientWidth || 600;
+  const h = el.clientHeight || 160;
+  svg.attr('viewBox', `0 0 ${w} ${h}`);
+  svg.selectAll('*').remove();
+
+  if (ordered.length < 2 || w === 0 || h === 0) return;
+
+  const values = ordered.map(r => Math.max(0, score(r)));
+  const x = d3.scalePoint().domain(d3.range(values.length)).range([6, w - 6]).padding(0.5);
+  const y = d3.scaleLinear().domain([0, Math.max(1, d3.max(values))]).nice().range([h - 4, 8]);
+
+  const area = d3.area()
+    .x((_, i) => x(i))
+    .y0(h)
+    .y1((d, i) => y(values[i]))
+    .curve(d3.curveMonotoneX);
+
+  const line = d3.line()
+    .x((_, i) => x(i))
+    .y((d, i) => y(values[i]))
+    .curve(d3.curveMonotoneX);
+
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient')
+    .attr('id', 'progressGrad').attr('x1', '0').attr('y1', '0').attr('x2', '0').attr('y2', '1');
+  grad.append('stop').attr('offset', '0%').attr('stop-color', '#4285f4').attr('stop-opacity', 0.30);
+  grad.append('stop').attr('offset', '100%').attr('stop-color', '#4285f4').attr('stop-opacity', 0);
+
+  // faint horizontal guide lines
+  const gridG = svg.append('g');
+  y.ticks(3).forEach(t => {
+    gridG.append('line')
+      .attr('x1', 0).attr('x2', w).attr('y1', y(t)).attr('y2', y(t))
+      .attr('stroke', '#00000012').attr('stroke-dasharray', '3 4');
+  });
+
+  svg.append('path').datum(values).attr('d', area).attr('fill', 'url(#progressGrad)');
+  svg.append('path').datum(values).attr('d', line)
+    .attr('fill', 'none').attr('stroke', '#e8a600').attr('stroke-width', 2.5)
+    .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+
+  svg.selectAll('circle.pt')
+    .data(values)
+    .enter().append('circle').attr('class', 'pt')
+    .attr('cx', (_, i) => x(i)).attr('cy', (d, i) => y(values[i])).attr('r', 3)
+    .attr('fill', '#e8a600');
+}
+
+window.addEventListener('resize', () => renderProgressChart(allRuns));
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Main render
 // ═══════════════════════════════════════════════════════════════════════════
 function render() {
   renderTiles(allRuns);
   renderTree(allRuns);
   renderArena(allRuns);
+  renderProgressChart(allRuns);
   renderLeaderboard(allRuns);
   renderTrace(allRuns);
 }
