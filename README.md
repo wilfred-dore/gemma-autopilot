@@ -10,10 +10,6 @@ An autonomous agent built on Gemma 4's native function calling: it benchmarks a 
 
 Built in one day at the Paris Gemma 4 Hackathon (42 Paris). Full writeup on Kaggle.
 
-*Scaffold note removed: see sections below.*
-
-*Scaffold: full README lands with the code (architecture, quickstart, metrics definitions, guardrails).*
-
 ## Demo video
 
 <video src="demo/output/gemma_autopilot_full_tour.mp4" controls width="100%">
